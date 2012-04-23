@@ -1,0 +1,457 @@
+\author{Thomas Backman, exscape@gmail.com}
+\date{\today}
+\title{6.002x notes}
+
+% Use a nice font
+\documentclass[12pt,a4paper]{report}
+
+% Custom package!
+% For strikethrough.
+%\usepackage{cancel}
+
+% Create clickable URLs
+%\usepackage{url}
+
+% Multiline comments
+%\usepackage{verbatim}
+
+% Aligned equations, possibly more later
+\usepackage{amsmath}
+
+% Links in the table of contents
+\usepackage[colorlinks=true, urlcolor=blue,linkcolor=red]{hyperref}
+
+% Fix margins and indentation
+\usepackage[cm]{fullpage}
+\addtolength{\oddsidemargin}{-0.75cm}
+\addtolength{\evensidemargin}{-0.75cm}
+\addtolength{\topmargin}{-0.5cm}
+\setlength{\parindent}{0in}
+
+% For circuit diagrams
+\usepackage{siunitx}
+\usepackage[american,siunitx]{circuitikz}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Formulas and such %%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Formulas and such}
+
+\section{Intro}
+
+This chapter contains several common formulas etc., without any further explanation of how they are derived.
+
+\section{Digital}
+
+\subsection{Noise margins}
+\begin{align*}
+  NM_H &= V_{OH} - V_{IH}\\
+  NM_L &= V_{IL} - V_{OL}\\
+\text{Forbidden region} &= V_{IH} - V_{IL}
+\end{align*}
+
+\section{MOSFETs}
+
+\subsection{SCS model}
+\[ 
+ i_{DS} = \begin{cases}
+   \frac{K}{2}(v_{GS} - V_T)^2 & \text{for $v_{GS} \ge V_T, v_{DS} \ge v_{GS} - V_T$} \\
+   0 & \text{for $v_{GS} < V_T$}
+ \end{cases}
+\]
+The above covers saturation and cutoff regions only (the SCS model).
+
+\subsection{SR model}
+
+\[ 
+  i_{DS} = \begin{cases}
+  \frac{V_{DS}}{R_{ON}} & \text{for $V_{GS} \ge V_T$} \\
+  0 & \text{otherwise}
+  \end{cases}
+\]
+
+Alternatively:
+\[ 
+  R_{DS} = \begin{cases}
+  R_{ON} & \text{for $V_{GS} \ge V_T$} \\
+  \infty & \text{otherwise}
+  \end{cases}
+\]
+
+Used for digital circuits only (in this course).
+
+\section{State devices / energy storage devices}
+This section assumes time-invariant devices, i.e. capacitance/inductance is a fixed value, and not a function of time.
+
+\subsection{Capacitors}
+
+The current through a capacitor is a function of the \emph{rate of change} of voltage:
+
+\[ i(t) = C \frac{dv(t)}{dt} \]
+
+To find the voltage over a capacitor, we need to know its full history:
+
+\[ v(t) = \frac{1}{C} \int_{-\infty}^{t} i(t) dt \]
+
+... or we can simply do it by knowing the current through it between $t_1$ and $t_2$, plus the initial voltage:
+
+\[ v(t_2) = \frac{1}{C} \int_{t_1}^{t_2} i(t) dt + v(t_1) \]
+
+The energy stored in a capacitor is:
+
+\[ E = \frac{1}{2} C v^2 \]
+
+\subsection{Inductors}
+
+The voltage over an inductor is a function of the \emph{rate of change} of current:
+
+\[ v(t) = L \frac{di(t)}{dt} \]
+
+To find the current through a capacitor, we need to know its full history:
+
+\[ i(t) = \frac{1}{L} \int_{-\infty}^t v(t) dt \]
+
+... or we can simply do it by knowing the voltage over it between $t_1$ and $t_2$, plus the initial current through it:
+
+\[ i(t_2) = \frac{1}{L} \int_{t_1}^{t_2} v(t) dt + i(t_1) \]
+
+The energy stored in an inductor is:
+
+\[ E = \frac{1}{2} L i^2 \]
+
+\newpage
+
+\section{Components in series and parallel}
+
+Series resistances add:
+
+\[ R_s = R_1 + R_2 + R_3 + \cdots \]
+
+Parallel resistances diminish:
+
+\[ R_p = \frac{1}{ \frac{1}{R_1} + \frac{1}{R_2} + \frac{1}{R_3} + \cdots} \]
+
+Series capacitances diminish:
+
+\[ C_s = \frac{1}{ \frac{1}{C_1} + \frac{1}{C_2} + \frac{1}{C_3} + \cdots} \]
+
+Parallel capacitances add:
+
+\[ C_p = C_1 + C_2 + C_3 + \cdots \]
+
+Series inductances add:
+
+\[ L_s = L_1 + L_2 + L_3 + \cdots \]
+
+Parallel inductances diminish:
+
+\[ L_p = \frac{1}{ \frac{1}{L_1} + \frac{1}{L_2} + \frac{1}{L_3} + \cdots} \]
+
+For the special case of two components of the diminshing type (x being a dummy variable):
+
+\[ \frac{1}{ \frac{1}{x_1} + \frac{1}{x_2} } = \frac{x_1 \cdot x_2}{x_1 + x_2} \]
+
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Circuit analysis %%%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Circuit analysis}
+
+\section{Thevenin equivalent circuits}
+
+Say we have an capacitor circuit to analyze:
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [V=$V_S$] (0,3)
+                             to [R=$R_1$]  (3,3)
+                             to [R=$R_2$]  (6,3)
+                             to [C=$C$, v=$v_C$]   (6,0);
+
+\draw (3,3)                  to [R=$R_3$]  (3,0);
+\draw (0,0)                  to           (6,0);
+\end{circuitikz}
+\\
+
+Since this is a linear network, we can simplify it by calculating its \emph{Thevenin equivalent}. Consider the network as seen from the port where the capacitor is attached:
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [V=$V_S$] (0,3)
+                             to [R=$R_1$]  (3,3)
+                             to [R=$R_2$, -o]  (6,3);
+
+\draw (3,3)                  to [R=$R_3$]  (3,0);
+\draw (0,0)                  to [short, -o]         (6,0);
+\draw (6,0)                  to [open, v>=$V_{TH}$] (6,3);
+\end{circuitikz}
+\\
+
+$V_{TH}$, the open circuit voltage, will be given by the voltage divider formed by $R_3$ and $R_1$:
+
+\[ V_{TH} = \frac{R_3}{R_1 + R_3} \cdot V_S \]
+
+Since no current flows at the port (for the \emph{open circuit} voltage!), $R_2$ doesn't contribute at all.
+
+We also want to measure the resistance ``looking in'' to this port; this will be the Thevenin resistance $R_{TH}$. To do this, we turn off all \emph{independant} voltage and current sources, by replacing all current sources with \emph{opens} and all voltage sources with \emph{short circuits}.\\
+Leave dependant sources in the circuit!
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0)                  to [short] (0,3)
+                             to [R=$R_1$]  (3,3)
+                             to [R=$R_2$, -o]  (6,3);
+
+\draw (3,3)                  to [R=$R_3$]  (3,0);
+\draw (0,0)                  to [short, -o]         (6,0);
+\draw (6,0)                  to [open] (6,3);
+\end{circuitikz}
+
+\[ R_{TH} = R_2 + (R_1 || R_3) = R_2 + \frac{R_1 \cdot R_3}{R_1 + R_3} \]
+
+Now that we know the Thevenin voltage $V_{TH}$ and the Thevenin resistance $R_{TH}$, we can replace the circuit with a voltage source of voltage $V_{TH}$ volts in series with a resistor of value $R_{TH}$ ohm, and place the capacitor back into the circuit:
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [V=$V_{TH}$] (0,3)
+                             to [R=$R_{TH}$] (3,3)
+                             to [C=$C$, v=$v_C$]      (3,0);
+\draw (0,0)                  to              (3,0);
+\end{circuitikz}
+                             
+Our previous circuit has now turned into a simple RC circuit, which is easier to analyze. See the chapter on RC circuits.\\
+
+As a side note, another way of measuring the Thevenin resistance is to short circuit the output node, calculate/measure the short-circuit current (with all sources left intact, of course), and calculate $R_{TH}$ as $\frac{V_{TH}}{I_{SC}}$.\\
+
+In summary:
+
+$\bullet$ Calculate/measure the open circuit voltage $V_{TH}$ at the port\\
+$\bullet$ Turn off all independent sources (make short circuits of voltage sources, and open circuits of current sources), but leave dependant sources intact\\
+$\bullet$ Calculate/measure the resistance $R_{TH}$ at the port terminal pair\\
+$\bullet$ Replace the original circuit with a series circuit of a voltage source (voltage $V_{TH}$ volts), a resistor (resistance $R_{TH}$ ohm) and the element you want to analyze.
+
+\newpage
+
+\section{Norton equivalent circuits}
+Nortan equivalent circuits are very similar to Thevenin equivalents, but use a \emph{current source} in \emph{parallel} with a resistor rather than a \emph{voltage source} in \emph{series} with a resistor.
+
+To convert a circuit to its Norton equivalent:
+
+$\bullet$ Calcurate/measure the \emph{short circuit current}, i.e. the current that would flow through the output port if we were to short-circuit it. The result is the Norton current $I_N$.\\
+$\bullet$ Turn off all independent sources (make short circuits of voltage sources, and open circuits of current sources), but leave dependant sources intact.\\
+$\bullet$ Calculate/measure the resistance at the port terminal pair; the result is the Norton resistance $R_N$.\\
+$\bullet$ Replace the original circuit with a parallel circuit of a current source (current $I_N$ amperes), a resistor (resistance $R_N$ ohm) and the element you want to analyze.\\
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [I=$I_N$] (0,3);
+\draw (0,3) to (3,3);
+\draw (3,3) to [R=$R_N$] (3,0);
+\draw (6,3) to [C=$C$, v=$v_C$] (6,0);
+\draw (6,0) to (0,0);
+\draw (6,3) to (3,3);
+\end{circuitikz}
+\\
+
+Note that since the method for calculating the equivalent resistance is identical for the Thevenin and Norton methods, $R_N = R_{TH}$.
+It is easy to convert between one and the other:
+
+\[ R_N = R_{TH} \]
+\[ I_N = \frac{V_{TH}}{R_{TH}} \]
+\[ V_{TH} = I_N \cdot R_N \]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Small signal method %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Small signal method}
+\section{Deriving small signal models}
+
+For a device with $i_D = f(v_D)$, the small signal current $i_d$ is given by
+
+\[ \underbrace { \left. \frac{\partial f(v_D)}{\partial v_D} \right|_{v_D=V_D} }_{\displaystyle g_m} \cdot v_d \]
+
+where $v_d$ is the small signal input voltage.\\
+In other words, take the partial derivative of the V-I relation, with respect to the voltage. That gives $g_m$, the transconductance. The transconductance multiplied by the small signal input voltage $v_d$ gives the small signal current.\\
+
+As an example, a MOSFET in the saturation region has $i_{DS} = f(v_{GS}) = \frac{K}{2}(v_{GS} - V_T)^2$:
+
+\[ i_{ds} = \underbrace { \left. \frac{ \partial \frac{K}{2}(v_{GS} - V_T)^2 }{\partial v_{GS}} \right|_{v_{GS}=V_{GS} }}_{\displaystyle g_m} \cdot v_{gs} = \underbrace{ K(V_{GS} - V_T)}_{\displaystyle g_m} \cdot v_{gs} \]
+
+Note the difference between $v_{GS}$ (the total gate-to-source voltage), $V_{GS}$ (the DC bias voltage) and $v_{gs}$ (the small signal / incremental voltage). \\
+Also note that the value of $g_m$ depends not only on the MOSFET parameters $K$ and $V_T$, but also on the user-chosen DC bias voltage $V_{GS}$.\\
+
+Here's a table of common circuit elements and their small signal equivalents:\\
+
+\begin{tabular}{| l | l |}
+\hline
+Device & Small signal replacement \\ \hline
+Resistor, R $\Omega$        & Resistor, R $\Omega$ \\ \hline
+Voltage source, V volts     & Short circuit \\ \hline
+Current source, I amps      & Open circuit \\ \hline
+MOSFET in saturation region & VCCS, $i_{ds} = g_m v_{gs}$, $g_m = K(V_{GS} - V_T)$ \\ \hline 
+MOSFET with gate/drain tied together & Resistor, $\displaystyle \frac{1}{K(V_{DS} - V_T)} \Omega$ (for $v_{DS} > V_T$) \\ \hline
+\end{tabular}
+
+\newpage
+
+\section{Multivariable small signal models}
+In some cases, it might be necessary to make a small signal model of a device where the current depends on more than one variable. An example (that will be used here) in 6.002x is the (probably hypothetical) ``NewFET'' in the week 6 homework.\\
+In this case, we take the partial derivative of the gate-to-source voltage at the bias point times the small signal voltage $vgs$, \emph{plus} the partial derivative of the drain-to-source voltage at the bias point times the small signal voltage $vds$.
+
+First, the properties of the NewFET:
+
+\[ 
+iDS = \begin{cases}
+  0 & \text{for $v_{GS} < V_T$} \\
+  K(v_{GS} - V_T) {v_{DS}}^2 & \text{for $v_{GS} \ge V_T$}
+\end{cases}
+\]
+\\
+The small signal model will look like this:
+
+\begin{circuitikz}[scale=1.2]
+\draw (3,2.5) to [cI=$g_m v_{gs}$, *-*] (3,0);
+\draw (5,2.5) to [R=$r_o$, *-*] (5,0);
+\draw (5,2.5) to [short, i<=$i_{ds}$] (6,2.5) node {\quad D};
+\draw (5,0) to (6,0) [short] node {\quad S};
+\draw (7,2.5) to [open, v=$v_{ds}$] (7,0);
+\draw (3,2.5) to (5,2.5);
+\draw (0,0) to (5,0);
+\draw (-0.25,0) node {S} [open] to (0,0);
+\draw (0,2.5) [open, v=$v_{gs}$, *-*] to (0,0);
+\draw (-0.25,2.5) node {G} [open] to (0,2.5);
+
+\end{circuitikz}
+\\
+
+The small signal current $i_{ds}$ will depend on both $v_{gs}$ and $v_{ds}$, in this manner:
+
+\[ 
+  i_{ds} = v_{gs} \underbrace{ \left. \frac{\partial i_D}{\partial v_{GS}} \right|_{v_{GS}=V_{GS}}}_{\displaystyle g_m} + v_{ds} \underbrace{ \left. \frac{\partial i_D}{\partial v_{DS}} \right|_{v_{DS}=V_{DS}}}_{\displaystyle 1/r_o}
+\]
+
+$g_m$ will be the regular transconductance, calculated the same as with MOSFETs (see the above section):
+
+\[ 
+  g_m = \left. \frac{\partial i_D}{\partial v_{GS}} \right|_{v_{GS}=V_{GS}} = \left. \frac{\partial K(v_{GS} - V_T) {v_{DS}}^2}{ \partial v_{GS}} \right|_{v_{GS}=V_{GS}} = K {V_{DS}}^2
+\]
+
+$r_o$ will be the \emph{reciprocal} of the partial of $i_D$ with respect to $v_{DS}$:\\
+(In other words, the partial will give a conductance, and we want a resistance.)
+
+\[ 
+  \frac{1}{r_o} = \left. \frac{\partial i_D}{\partial v_{DS}} \right|_{v_{DS}=V_{DS}} = \left. \frac{\partial K(v_{GS} - V_T) {v_{DS}}^2}{ \partial v_{DS}} \right|_{v_{DS}=V_{DS}} = 2 K V_{DS} (V_{GS} - V_T)
+\]
+So
+\[ r_o = \frac{1}{2 K V_{DS} (V_{GS} - V_T)} \]
+
+From these equations and the circuit diagram, we see that 
+\[
+ i_{ds} = \frac{v_{ds}}{r_o} + g_m v_{gs} = v_{ds} \cdot 2 K V_{DS} (V_{GS} - V_T) + K {V_{DS}}^2 \cdot v_{gs} 
+ \]
+
+Note that, although the expression contains a square term (${V_{DS}}^2$), it is still linear, as the square term is a constant - the bias voltage $V_{DS}$ should not change, or the entire small signal model will be incorrect either way.
+
+So, the result is not quite the simplest of expressions, but when the bias constants are replaced with their actual bias values, the result is of the form
+
+\[ i_{ds} = C_{1} v_{ds} + C_{2} v_{gs} \]
+
+where $C_1$ and $C_2$ are constants.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% First-order circuits %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{First-order circuits}
+\section{Series RC circuits}
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [V=$V_S$] (0,3)
+					  to [R=$R$]     (3,3)
+					  to [C=$C$, v<=$v_C$]	(3,0);
+\draw (3,0) to (0,0);
+\end{circuitikz}
+\\
+
+We start off by writing down a KCL equation for the unknown node voltage $v_C$:\\
+\[ \frac{v_C - V_S}{R} + C \frac{dv_C}{dt} = 0 \]
+
+Rewrite the equation to get it in the form we prefer:
+
+\[ RC \frac{dv_C}{dt} + v_C = V_S \]
+
+To solve this first-order linear differential equation, we'll use the method of particular and homogeneous solutions, where we need to find two solutions to the differential equation: the first (the \emph{particular} solution) is \emph{any} solution that makes the equation true:
+
+\[ RC \frac{dv_{Cp}}{dt} + v_{Cp} = V_S \]
+
+We see here that if we pick $v_{Cp} = V_S$, where $V_S$ is a constant, thus making $\frac{dV_S}{dt} = 0$, this equation is indeed true; since the first term becomes 0, all that remains is $V_S = V_S$ - which is clearly true!\\
+Thus, we've found the particular solution:
+
+\[ v_{Cp} = V_S \]
+
+The next step in this method is to find a solution to the homogeneous equation, where $V_S$ (the ``input drive'') is zero:
+
+\[ RC \frac{dv_{Ch}}{dt} + v_{Ch} = 0 \]
+
+We need a function such that its derivative is the function itself times a constant. $e^x$ comes to mind - more specifically, the solution will have some (still unknown) coefficients $A$ and $s$, such that:
+
+\[ v_{Ch} = Ae^{st} \]
+
+We substitute $Ae^{st}$ into the homogeneous equation and end up with:
+
+\[ RC \frac{dAe^{st}}{dt} + Ae^{st} = 0 \]
+
+We calculate the derivative and replace the $\frac{d}{dt}$ term with it:
+
+\[ RCAs e^{st}  +Ae^{st} = 0 \]
+
+Divide both sides by $Ae^{st}$:
+
+\[ RCs + 1 = 0 \]
+\[ RCs = -1 \]
+\[ s = -\frac{1}{RC} \]
+
+We've thus found one of our two constants.\\
+The total solution to the differential equation will be the \emph{sum} of the particular and homogeneous solutions, so the next step is to add them together:
+
+\[ v_C(t) = v_{Cp}(t) + v_{Ch}(t) \]
+\[ v_C(t) = V_S + Ae^{-\frac{1}{RC} \cdot t} \]
+
+All that remains to do is to find the value of the constant $A$. To do so, we substitute $v_C$ for the given initual condition $v_C(0) = V_0$, while setting $t = 0$:
+
+\[ V_0 = V_S + Ae^0 \]
+\[ V_0 = V_S + A \]
+\[ A = V_0 - V_S \]
+
+We've thus found the full solution:
+
+\[ v_C(t) = V_S + (V_0 - V_S)e^{-\frac{t}{RC}} \]
+
+\newpage
+
+\section{Parallel RC circuit with a current source}
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [I=$I$] (0,3);
+\draw (0,3) to (2,3);
+\draw (2,3) to [R=$R$] (2,0);
+\draw (2,3) to (4,3);
+\draw (4,3) to [C=$C$, v=$v_C$] (4,0);
+\draw (4,0) to (0,0);
+\end{circuitikz}
+\\
+
+To save time (and space): the differential equation we end up with is exactly the same as for the series circuit above, with the sole difference that $IR$ replaces $V_S$, where $I$ is the current source drive current, and $R$ is the parallel resistor's resistance.\\
+Since the resulting equation
+
+\[ RC \frac{dv_C}{dt} + v_C = IR \]
+is of the same form as the one for the series circuit, the solution is also the same:
+
+\[ v_C(t) = IR + (V_0 - IR)e^{-\frac{t}{RC} } \]
+
+\end{document}
