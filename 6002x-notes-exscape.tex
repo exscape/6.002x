@@ -7,7 +7,7 @@
 
 % Custom package!
 % For strikethrough.
-%\usepackage{cancel}
+\usepackage{cancel}
 
 % Create clickable URLs
 %\usepackage{url}
@@ -453,5 +453,231 @@ Since the resulting equation
 is of the same form as the one for the series circuit, the solution is also the same:
 
 \[ v_C(t) = IR + (V_0 - IR)e^{-\frac{t}{RC} } \]
+
+\chapter{Second-order circuits}
+\section{Series RLC circuits}
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [V=$V_S$] (0,3)
+                     to [L=$L$, v<=$v_L$]     (2,3)
+					  to [R=$R$, v<=$v_R$, i>=$i$]     (4,3)
+					  to [C=$C$, v<=$v$]	(4,0);
+\draw (4,0) to (0,0);
+\end{circuitikz}
+
+We know that the current $i$ relates to the capacitor voltage:
+
+\[ i = C \frac{dv}{dt} \]
+
+Since this is a series circuit, that current goes through all elements.
+
+By KVL, we can add up the voltage drops around the loop, with the proper sign. I'll go clockwise, and start in the bottom left:
+
+\[ -V_S + v_L + v_R + v = 0 \]
+
+If we solve for $V_S$:
+
+\[ V_S = v_L + v_R + v \]
+
+Now, let's use the element laws for the inductor and resistor, and substitute them into the above:
+
+\[ V_S = L \frac{di(t)}{dt} + R i(t) + v(t) \]
+\newpage
+We know that $i(t) = C \frac{dv}{dt}$, so let's substitute that back in. Let's also differentiate, in case of the inductor, to reduce the mess of nested differentiation operators:
+
+\[ V_S = LC \frac{d^2v(t)}{dt^2} + RC \frac{dv}{dt} + v(t) \]
+
+There we go; we now have a second-order, linear, constant coefficient ordinary differential equation.\footnote{I just love these overly verbose classifications.}\\
+
+We'll use the same method to solve it as we did for the first-order ones, namely the method of particular and homogeneous solutions. First we first the particular solution (\emph{any} solution that makes the equation true), then the homogeneous solution (a solution to the equation with the input drive $V_S$ set to 0), and finally we add the two together to find the total solution.\\
+
+As for the particular solution, just as in the first-order case, we try $v(t) = V_S$ and see that the two derivatives both go to zero (as $V_S$ is a constant), and so we end up with
+
+\[ V_S = V_S \]
+
+which tells us that $V_S$ indeed is a particular solution. On to the homogeneous one, i.e. the solution to 
+
+\[ LC \frac{d^2v(t)}{dt^2} + RC \frac{dv}{dt} + v(t) = 0\]
+
+Again, like in the first-order case, we try the form 
+
+\[ v(t) = Ae^{st} \]
+
+where $A$ and $s$ are constants we'll have to find later. So, we substitute $Ae^{st}$ for $v(t)$, and differentiate where necessary, which gives us
+
+\[ LC As^2 e^{st} + RC As e^{st} + A e^{st} = 0 \]
+
+We can cancel out a ton of the above, by dividing both sides by $A e^{st}$:
+
+\[ LC \cancel{A} s^2 \cancel{e^{st}} + RC \cancel{A}s \cancel{e^{st}} + \cancel{A e^{st}} = 0 \]
+What remains is
+
+\[ LC s^2 + RC s + 1 = 0 \]
+
+Divide by LC throughout:
+
+\[ s^2 + \frac{R}{L} s + \frac{1}{LC} = 0 \]
+
+We've thus arrived at the \emph{characteristic equation}, which describes most details of the circuit's behavior. There's a canonical form to write such an equation:
+
+\[ s^2 + 2\alpha s + {\omega_0}^2 = 0 \]
+
+So, in the case of the series RLC circuit, the values of $\alpha$ and $\omega_0$ would have to be
+
+\[ \alpha = \frac{R}{2L} \]
+and
+\[ \omega_0 = \frac{1}{\sqrt{LC}} \]
+
+$\alpha$ relates to the damping factor of the circuit (sometimes the damping factor, $\displaystyle \zeta = \frac{\alpha}{\omega_0}$, is used) - that is, the ringing second-order circuits can produce will decay faster for a larger value of $\alpha$. Meanwhile, $\omega_0$ is the \emph{undamped resonance frequency} of the circuit (in radians/second), the same as in undriven LC circuits. However, this might not be the frequency of interest in a RLC circuit - more on that later.\\
+
+Let's get back to solving the differential equation. Remember, we only found the homogeneous solution - we still haven't figured out the values of $s$ or $A$.
+
+The next step would be to find the roots of the characteristic equation:
+
+\[ s^2 + 2\alpha s + {\omega_0}^2 + 0 \]
+
+The quadratic formula will work nicely on this. The two roots are:
+
+\[ s_1 = -\alpha + \sqrt{\alpha^2 - {\omega_0}^2} \]
+\[ s_2 = -\alpha - \sqrt{\alpha^2 - {\omega_0}^2} \]
+
+The full solution to the homogeneous solution will then be
+
+\[ v_H = A_1 e^{s_1 t} + A_2 e^{s_2 t} \]
+
+However, we've now found $s_1$ and $s_2$, so we can fill them in:
+\large
+\[ v_H = A_1 e^{(-\alpha + \sqrt{\alpha^2 - {\omega_0}^2}) t} + A_2 e^{(-\alpha - \sqrt{\alpha^2 - {\omega_0}^2}) t} \]
+\normalsize
+
+Then, the total solution (prior to finding $A_1$ and $A_2$, and also prior to simplifying) is:
+
+\[ v(t) = V_S + A_1 e^{(-\alpha + \sqrt{\alpha^2 - {\omega_0}^2}) t} + A_2 e^{(-\alpha - \sqrt{\alpha^2 - {\omega_0}^2}) t} \]
+
+After some magic\footnote{Sorry, but I don't quite follow the entire process myself yet. Since this part was cut out from the lectures in order to save time (after ~14 videos going through this process so far), I will do the same.} and making the definition $\omega_d = \sqrt{{\omega_0}^2 - \alpha^2}$, the total solution ends up looking like this, for the case $\omega_0 > \alpha$, i.e. the underdamped case:
+
+\[ v(t) = V_I + K_1 e^{-\alpha t} \cos{\omega_d t} + K_2 e^{-\alpha t} \sin{\omega_d t} \]
+
+Evaluating the above at t = 0 with the initial condition $v(0) = 0$ gives us:
+
+\[ 0 = V_I + K_1 \]
+\[ K_1 = -VI \]
+
+Evaluating at t = 0 with the other initial condition, $\displaystyle i(0) = C \frac{dv}{dt} = 0$, gives, after the differentiation and substitution for $t = 0$:
+
+\[ 0 = -K_1 \alpha + K_2 \omega_d \]
+
+We know that $K_1 = -V_I$:
+
+\[ 0 = V_I \alpha + K_2 \omega_d \]
+\[ K_2 \omega_d = -V_I \alpha \]
+\[ K_2 = -\frac{V_I \alpha}{\omega_d} \]
+
+Thus, finally, the full equation that governs the capacitor voltage of the series RLC circuit, in the underdamped case ($\omega_0 > \alpha$) is:
+
+\[ v(t) = V_I - V_I e^{-\alpha t} \cos{\omega_d t} - \frac{V_I \alpha}{\omega_d} e^{-\alpha t} \sin{\omega_d t} \]
+
+Using the scaled sum of sines trig identity, we can turn this cosine minus sine business into a a single cosine, and end up with:
+
+\[ v(t) = V_I - V_I \frac{\omega_0}{\omega_d} e^{-\alpha t} \cos{(\omega_d t - \arctan{(\frac{\alpha}{\omega_d})})} \]
+
+While the equation is rather involved, it's still very clear that the two main features are a cosine multiplied by a decaying exponential, which will give us exactly the kind of waveform we see in a damped second-order system.
+
+\subsection{Summary}
+Since this section was by \emph{far} the longest of this document, I thought a summary of the relevant formulas could be useful. Remember that most of these only apply to series RLC circuits, though some definitions (such as $\omega_d$) are universal.\\
+
+Where v(t) denotes the capacitor node voltage in the circuit shown (far) above - also, remember that this is for the \emph{underdamped} case, i.e. $\displaystyle \omega_0 > \alpha$:
+
+\[ v(t) = V_I - V_I \frac{\omega_0}{\omega_d} e^{-\alpha t} \cos{(\omega_d t - \arctan{(\frac{\alpha}{\omega_d})})} \]
+
+where
+
+\[ \alpha = \frac{R}{2L} \text{ rad/s}\]
+\[ \omega_0 = \frac{1}{\sqrt{LC}} \text{ rad/s} \]
+\[ \omega_d = \sqrt{{\omega_0}^2 - \alpha^2} \text{ rad/s} \]
+
+Other formulas that may be useful are:
+\[ Q = \frac{\omega_0}{2\alpha} \text{ (dimensionless)} \]
+\[ \text{Period} = \frac{2\pi}{\omega_d} \text{ seconds} \]
+\[ \text{Frequency} = \frac{\omega_d}{2\pi} = \frac{1}{2\pi \sqrt{LC}} \text{ Hz} \]
+
+The quality factor, $Q$, can (for now) be thought of as the approximate number of oscillations that will occur before the ringing dies out due to the damping, though the actual meaning is more precisely defined.
+
+\chapter{Miscellaneous}
+\section{Impulses and steps}
+
+\subsection{A note}
+For a linear circuit - one with resistors, capacitors and inductors \emph{ONLY} - no sources allowed - an interesting relation between input and output exists. If y(t) is the output for the input x(t), the output for the derivative of x(t) will be the derivative of y(t). The same goes for integration. That is,
+
+\[ x(t) \to y(t) \]
+\[ x'(t) \to y'(t) \]
+\[ \int x(t) dt \to \int y(t) dt \]
+
+The usefulness for this will soon be clear. In a short preview, we can calculate the behaviour of such a circuit to for example an impulse, and then integrate the response we got; the integrated answer will then be the circuit response to a \emph{step}, as a step is the result of integrating an impulse.
+
+\subsection{Impulses}
+Impulses are (theoretical) bursts of an infinite voltage/current over an infinitesimally small time. The Dirac Delta function, $\delta(t)$, is used to describe them. The delta function is defined as\footnote{Perhaps not rigorously, but good enough for our purposes.}
+
+\[ \delta(x) = \begin{cases}
+   +\infty & x = 0 \\
+   0       & x \neq 0
+   \end{cases}
+\]
+In other words, it is zero everywhere except at $x = 0$, where it's infinite. There is an additional identity it is constrained to, however:
+
+\[ \int_{-\infty}^{\infty} \delta(x) dx = 1 \]
+In other words, the area under the curve is exactly 1. Mathematically, the delta function is not a proper function, but can be defined as a distribution.
+
+In a parallel, current source-driven RC circuit, a current impulse at $t = 0$ delivers 100\% of its charge to the capacitor, and essentially creates an initial condition for $t = 0^{+}$. Assuming the capacitor has no state, the capacitor voltage after the impulse will be 
+
+\[ v_C(0^{+}) = \frac{Q}{C} \]
+
+where Q is the area of the impulse, i.e. the current source output is given by
+
+\[ Q \delta(t) \], so Q is in coulombs, the SI unit for electric charge. The unit is such that
+
+\[ \frac{1\text{ coulomb}}{1\text{ farad}} = 1\text{ volt} \]
+
+In such a circuit, the capacitor voltage (and thus the entire circuit's voltage, as there is only 1 node besides ground) for $t > 0^{+}$ will be given by
+
+\[ v_C(t) = \frac{Q}{C} e^{-\frac{t}{RC}} \]
+
+The dual of this circuit is the series RL circuit, with a voltage source, a resistance and an inductance. In this case, we have a voltage impulse, that delivers a flux linkage $\Lambda$ to the inductor. As above, this will essentially create an initial condition, this time for the inductor current. Assuming the inductor has no state, the current through it will be:
+
+\[ i_L(0^{+}) = \frac{\Lambda}{L} \]
+
+where $\Lambda$ is the area of the impulse, i.e. the voltage source output is given by
+
+\[ \Lambda \delta(t) \], so $\Lambda$ is in webers, the SI unit for magnetic flux. The unit is such that
+\[ \frac{1\text{ weber}}{1\text{ henry}} = 1\text{ ampere} \]
+
+Again, an in the previous case (the circuits are duals, after all), the inductor current for $t > 0^{+}$ is given by
+
+\[ i_L(t) = \frac{\Lambda}{L} e^{-\frac{R t}{L}} \] 
+
+\subsection{Steps}
+Steps are the result of integrating an impulse. Steps are likely more intuitive than impulses. The unit step function (or the \emph{Heaviside step function}) has the definition
+
+\[ u(t) = 
+  \begin{cases}
+   0  & t < 0 \\
+   1  & t \ge 0
+  \end{cases}
+\]
+In words, it ``turns on'' at $t = 0$, and so is a useful model for things such as a voltage source turning on at $t = 0$. Such a source could be written as
+
+\[ V_I u(t) \]
+where $V_I$ is the voltage of the source when turned on.\\
+
+As noted in the introduction section, a step is the result of integrating an impulse. Thus, we can calculate the circuit response to a step by calculating the response to an impulse, and then integrate the answer.\\
+In a similar manner, we can calculate the response to a step, and differentiate the answer to find the response to an impulse.
+
+\subsection{Shifts}
+The above functions can be shifted to start at times other than $t = 0$ by shifting them.\\
+For example, while the unit step function $u(t)$ ``turns on'' at $t = 0$, we can make it turn on at time $t = 5$ by shifting it, like so: $u(t - 5)$\\
+The above function will have $t - 5$ be negative until $t = 5$ where it becomes positive, and the unit step function changes its output from 0 to 1.\\
+The exact same principle applies to the unit impulse function $\delta(t)$.
+
+In general, for the change to happen at time $t = T$, use $u(t - T)$ or $\delta(t - T)$.
 
 \end{document}
