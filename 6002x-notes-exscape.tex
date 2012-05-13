@@ -13,10 +13,15 @@
 %\usepackage{url}
 
 % Multiline comments
-%\usepackage{verbatim}
+\usepackage{verbatim}
 
-% Aligned equations, possibly more later
+\usepackage{graphicx}
+
+%\usepackage{pgfplots}
+
+% Aligned equations and more
 \usepackage{amsmath}
+\usepackage{mathtools}
 
 % Links in the table of contents
 \usepackage[colorlinks=true, urlcolor=blue,linkcolor=red]{hyperref}
@@ -47,6 +52,38 @@
 \section{Intro}
 
 This chapter contains several common formulas etc., without any further explanation of how they are derived.
+
+\section{Components in series and parallel}
+
+Series resistances add:
+
+\[ R_s = R_1 + R_2 + R_3 + \cdots \]
+
+Parallel resistances diminish:
+
+\[ R_p = \frac{1}{ \frac{1}{R_1} + \frac{1}{R_2} + \frac{1}{R_3} + \cdots} \]
+
+Impedances behave like resistances.\\
+
+Series capacitances diminish:
+
+\[ C_s = \frac{1}{ \frac{1}{C_1} + \frac{1}{C_2} + \frac{1}{C_3} + \cdots} \]
+
+Parallel capacitances add:
+
+\[ C_p = C_1 + C_2 + C_3 + \cdots \]
+
+Series inductances add:
+
+\[ L_s = L_1 + L_2 + L_3 + \cdots \]
+
+Parallel inductances diminish:
+
+\[ L_p = \frac{1}{ \frac{1}{L_1} + \frac{1}{L_2} + \frac{1}{L_3} + \cdots} \]
+
+For the special case of two components of the diminshing type (x being a dummy variable):
+
+\[ \frac{1}{ \frac{1}{x_1} + \frac{1}{x_2} } = \frac{x_1 \cdot x_2}{x_1 + x_2} \]
 
 \section{Digital}
 
@@ -128,37 +165,95 @@ The energy stored in an inductor is:
 
 \newpage
 
-\section{Components in series and parallel}
+\section{Second order circuits, impedance, filters}
 
-Series resistances add:
+Canonical form of the characteristic equation for second-order circuits; use this to match up the values of $\alpha$ and $\omega_0$ for a circuit:
 
-\[ R_s = R_1 + R_2 + R_3 + \cdots \]
+\[ s^2 + 2\alpha s + {\omega_0}^2 = 0 \]
 
-Parallel resistances diminish:
+\subsection{For all LC and RLC circuits:}
 
-\[ R_p = \frac{1}{ \frac{1}{R_1} + \frac{1}{R_2} + \frac{1}{R_3} + \cdots} \]
+\[ \text{Natural/undamped resonant radian frequency: } \omega_0 \text{ (rad/s)} \]
+\[ \text{Damping factor: } \alpha \text{ (rad/s)} \]
 
-Series capacitances diminish:
+Note that zeta ($\zeta$) is used as a damping factor in many texts; it is defined as
+\[ \zeta = \frac{\alpha}{\omega_0} \text{ (dimensionless)} \]
 
-\[ C_s = \frac{1}{ \frac{1}{C_1} + \frac{1}{C_2} + \frac{1}{C_3} + \cdots} \]
+The bandwidth $\Delta \omega$, i.e. the \emph{width} of the frequency \emph{band} that is above $\displaystyle \frac{1}{\sqrt{2}}$ times the input amplitude, is given by
 
-Parallel capacitances add:
+\[ \Delta \omega = 2 \alpha \text{ (rad/s) (measured at } \frac{1}{\sqrt{2}} \text{ points)} \]
 
-\[ C_p = C_1 + C_2 + C_3 + \cdots \]
+\[ \text{Quality factor: } Q = \frac{\omega_0}{2\alpha} \text{ (dimensionless)} \]
 
-Series inductances add:
+RLC circuits can be underdamped, overdamped, or critically damped.
 
-\[ L_s = L_1 + L_2 + L_3 + \cdots \]
+\[ \text{Underdamped: } \omega_0 > \alpha \text{ or, equivalently, } Q > \frac{1}{2} \text { or, equivalently, } \zeta < 1 \]
+\[ \text{Overdamped: } \omega_0 < \alpha \text{ or, equivalently, } Q < \frac{1}{2} \text { or, equivalently, } \zeta > 1 \]
+\[ \text{Critically damped: } \omega_0 = \alpha \text{ or, equivalently, } Q = \frac{1}{2} \text { or, equivalently, } \zeta = 1 \]
 
-Parallel inductances diminish:
+When they are \emph{underdamped}, the \emph{damped resonant frequency} $\omega_d$ is given by
+\[ \omega_d = \sqrt{{\omega_0}^2 - \alpha^2} \]
+The naming here might be confusing; the \emph{damped} frequency is used for \emph{underdamped} systems. The reason is that the \emph{undamped} frequency is used for systems with no damping whatsoever, i.e. LC circuits with no resistor.\\
+Underdamped RLC circuits are the only kind that oscillate, so the natural frequency is less interesting for overdamped circuits.
 
-\[ L_p = \frac{1}{ \frac{1}{L_1} + \frac{1}{L_2} + \frac{1}{L_3} + \cdots} \]
+\subsection{Series RLC circuits}
 
-For the special case of two components of the diminshing type (x being a dummy variable):
+\[ \omega_0 = \frac{1}{\sqrt{LC}} \text{ rad/s} \]
+\[ f_0 = \frac{1}{2\pi \sqrt{LC}} \text { Hz} \]
+\[ \alpha = \frac{R}{2L} \text{ rad/s} \]
+\[ \Delta \omega = 2\alpha = \frac{R}{L} \text { rad/s} \]
+\[ \text{Period: } \frac{2\pi}{\omega_0} = 2\pi \sqrt{LC} \text { seconds} \]
+\[ Q = \frac{\omega_0}{2\alpha} = \frac{L}{R\sqrt{LC}} \text { (dimensionless)} \]
 
-\[ \frac{1}{ \frac{1}{x_1} + \frac{1}{x_2} } = \frac{x_1 \cdot x_2}{x_1 + x_2} \]
+\subsection{Parallel RLC circuits}
 
-%
+\[ \omega_0 = \frac{1}{\sqrt{LC}} \text{ rad/s} \]
+\[ f_0 = \frac{1}{2\pi \sqrt{LC}} \text { Hz} \]
+\[ \alpha = \frac{1}{2RC} \text{ rad/s} \]
+\[ \Delta \omega = 2\alpha = \frac{1}{RC} \text { rad/s} \]
+\[ \text{Period: } \frac{2\pi}{\omega_0} = 2\pi \sqrt{LC} \text { seconds} \]
+\[ Q = \frac{\omega_0}{2\alpha} = \frac{RC}{\sqrt{LC}} \text { (dimensionless)} \]
+
+\subsection{Frequency- to time-domain conversion}
+You can find the time-domain behavior of a circuit to sinusoidal input from nothing but a complex amplitude of the form $V_x$:
+\[ v_X(t) = |V_x| \cos{(\omega t + \angle V_x)} \]
+See below for information about how to calculate the magnitude $|z|$ and the angle $\angle z$ of a complex number.
+
+\subsection{Complex algebra}
+A few properties of complex numbers that are necessary to know:
+
+\[ |a + jb| = \sqrt{a^2 + b^2} \]
+\[ \angle (a + jb) = \arctan{(\frac{b}{a})} \text{ or, preferably, } \text{atan2}(a, b) \]
+
+\[ |a + j0| = a \text { if $a > 0$; otherwise, the magnitude is just the absolute value } |a| \]
+\[ |0 + jb| = b \]
+\[ |0 - jb| = b \]
+
+\[ \angle (a + j0) = 0 \]
+\[ \angle (0 + jb) = \frac{\pi}{2} \]
+\[ \angle (0 - jb) = -\frac{\pi}{2} \]
+
+\[ |z_1 \cdot z_2| = |z_1| \cdot |z_2| \]
+\[ \left| \frac{z_1}{z_2} \right| = \frac{|z_1|}{|z_2|} \]
+
+\[ \angle (z_1 \cdot z_2) = \angle z_1 + \angle z_2 \]
+\[ \angle \left( \frac{z_1}{z_2} \right) = \angle z_1 - \angle z_2 \]
+
+When finding angles, it's best to use a function which is capable of giving correct answers in all quadrants of the unit circle. The ``atan2'' function was created in many computer languages for this purpose. It is equal to $\displaystyle \arctan{(\frac{b}{a})}$ for some inputs, but not all; arctan() cannot differentiate between all quadrants, because $\displaystyle \arctan{\left( \frac{-a}{-b}\right )} = \arctan{\left( \frac{a}{b}\right) }$ and likewise, $\displaystyle \arctan{\left( \frac{-a}{b}\right )} = \arctan{\left( \frac{a}{-b}\right) }$. Thus, the atan2 function has two arguments, and when using it, the angle of a complex number $a + jb$ is simply $\text{atan2}(a, b)$.\\
+The angle of a fully real number is always $0$, and the angle of a fully imaginary number always either $\displaystyle \frac{\pi}{2}$ (for positive imaginary numbers) or $\displaystyle -\frac{\pi}{2}$ (for negative imaginary numbers).
+
+One definition of atan2, if you are not using math software that has it, is:
+
+\[ \text{atan2}(b, a) = 2\arctan{(\frac{b}{\sqrt{a^2 + b^2} + a})} \]
+
+However, note that these notes use an atan2 function that is defined with the variables in the opposite order, i.e. atan2(a, b); specifically, Mathematica's ArcTan[a, b] function.
+
+
+\subsection{Impedances}
+
+\[ \text{Resistor: } Z_R = R \]
+\[ \text{Capacitor: } Z_C = \frac{1}{j\omega C} \]
+\[ \text{Inductor: } Z_L = j\omega L \]
 
 %%%%%%%%%%%%%%%%%%%%%%%%
 %%% Circuit analysis %%%
@@ -454,6 +549,10 @@ is of the same form as the one for the series circuit, the solution is also the 
 
 \[ v_C(t) = IR + (V_0 - IR)e^{-\frac{t}{RC} } \]
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Second-order circuits %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \chapter{Second-order circuits}
 \section{Series RLC circuits}
 
@@ -584,7 +683,7 @@ Using the scaled sum of sines trig identity, we can turn this cosine minus sine 
 While the equation is rather involved, it's still very clear that the two main features are a cosine multiplied by a decaying exponential, which will give us exactly the kind of waveform we see in a damped second-order system.
 
 \subsection{Summary}
-Since this section was by \emph{far} the longest of this document, I thought a summary of the relevant formulas could be useful. Remember that most of these only apply to series RLC circuits, though some definitions (such as $\omega_d$) are universal.\\
+Since this section was by \emph{far} the longest of this document so far, I thought a summary of the relevant formulas could be useful. Remember that most of these only apply to series RLC circuits, though some definitions (such as $\omega_d$) are universal.\\
 
 Where v(t) denotes the capacitor node voltage in the circuit shown (far) above - also, remember that this is for the \emph{underdamped} case, i.e. $\displaystyle \omega_0 > \alpha$:
 
@@ -598,10 +697,746 @@ where
 
 Other formulas that may be useful are:
 \[ Q = \frac{\omega_0}{2\alpha} \text{ (dimensionless)} \]
-\[ \text{Period} = \frac{2\pi}{\omega_d} \text{ seconds} \]
-\[ \text{Frequency} = \frac{\omega_d}{2\pi} = \frac{1}{2\pi \sqrt{LC}} \text{ Hz} \]
+\[ \text{Natural period} = \frac{2\pi}{\omega_0} \text{ seconds} \]
+\[ \text{Natural frequency} = \frac{\omega_0}{2\pi} = \frac{1}{2\pi \sqrt{LC}} \text{ Hz} \]
 
-The quality factor, $Q$, can (for now) be thought of as the approximate number of oscillations that will occur before the ringing dies out due to the damping, though the actual meaning is more precisely defined.
+The quality factor, $Q$, can (for now) be thought of as the approximate number of oscillations that will occur before the ringing dies out due to the damping, though the actual meaning is more precisely defined.\\
+
+One thing that is important to note, and that in truth should have been brought up in more detail, is that for the special case where $R = 0$, the circuit becomes a pure LC circuit, which will (in theory) oscillate forever. In practice, of course, parasitic resistances will make sure that doesn't happen - unless the circuit is superconducting.\\
+Why does it oscillate forever? Well, it's rather intuitive, at least if you accept that it will oscillate at all: it oscillates until the energy stored in the circuit is small enough that we see the voltages in the circuit to be constants. The only way energy stored is reduced at all is by resistances; without them, it rings forever.\\
+
+Mathematically, this is easy to see from the above equations: $\displaystyle Q = \frac{\omega_0}{2\alpha} \to \infty$ as $2\displaystyle \alpha = \frac{R}{L} \to 0$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Sinusoidal Steady State, Impedance and Filters %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Sinusoidal Steady State, Impedance and Filters}
+\section{Sinusoidal Steady State}
+Instead of showing the entire, rather long path from a drawn circuit to the impedance model, I will take considerable shortcuts by simply skipping some parts. The reason is that I don't find it that important to remember fully; any good book on the subject should show it, though. I'll try to cover what \emph{is} important to remember, however!\\
+
+Thus, the beginning of this chapter might be a bit hard to follow. However, this isn't an electronics book (which I would be very underqualified to write) - I assume that all readers already know most of this, and just wanted a little refresher.
+
+We'll try to analyze this circuit, for sinusoidal input:\\
+
+\begin{circuitikz}
+\draw (0,0) node [ground] {} to [sV=$v_I$] (0,3)
+					  to [R=$R$]     (3,3)
+					  to [C=$C$, v<=$v_C$]	(3,0);
+\draw (3,0) to (0,0);
+\end{circuitikz}
+
+where $v_I$ is a sinusoidal input, e.g. $V_I \cos{(\omega t)}$.
+
+So, let's get started. We write down the differential equations governing the dynamics of this circuit:
+\[ RC \frac{dv_C(t)}{dt} + v_C(t) = V_I \cos{(\omega t)} \]
+
+If this were anything like the time-domain RC circuit analysis for step inputs, we'd now go and find particular and homogeneous solutions for the circuit, add them, and solve for constants using initial conditions.\\
+However, this would not be a very nice analysis due to the massive amount of trigonometry that would turn out to be involved due to the sinusoidal drive. Instead, we'll go down a different path, and see that doing so brings us some rather massive advantages in simplicity - especially later on, when we've derived and understood the impedance model, that removes the need to use differential equations for many kinds of analyses!\\
+
+So, instead of analysing the circuit for the input signal $V_I \cos{(\omega t)}$, we'll analyse it for the input $V_i e^{s t}$.\\
+Our first analysis step is to attempt to find a particular solution that works with the given differential equation, which we've now modified (by choosing a different input) to be:
+
+\[ RC \frac{dv_C(t)}{dt} + v_C(t) = V_i e^{s t} \]
+
+Let's try a solution of the form $V_p e^{s t}$, and substitute that in:
+
+\[ RC \frac{d V_p e^{s t}}{dt} + V_p e^{s t} = V_i e^{s t} \]
+Let's carry out the differentiation:
+
+\[ RC V_p s e^{s t} + V_p e^{s t} = V_i e^{s t} \]
+
+Let's cancel out the $\displaystyle e^{s t}$ terms that are common to all terms:
+
+\[ RC V_p s \cancel{e^{s t}} + V_p \cancel{e^{s t}} = V_i \cancel{e^{s t}} \]
+
+\[ RC V_p s + V_p = V_i \]
+
+Rearrange, then solve for $V_p$:
+
+\[ V_p (RC s + 1) = V_i \]
+\[ V_p = \frac{V_i}{1 + sRC} \]
+
+However, remember that we crossed out all the $\displaystyle e^{s t}$ terms. The full particular solution is
+
+\[ V_p e^{s t} =  \frac{V_i}{1 + sRC} e^{s t} \]
+
+Now, let's assume that $s = j \omega$, where j is the imaginary unit $j = \sqrt{-1}$. We do the substitution, and get the particular solution
+
+\[ \text{Particular solution } = \frac{V_i}{1 + j \omega RC} e^{j \omega t} \]
+
+Note that because this chapter deals with sinusoidal \emph{steady state} analysis, we will ignore the homogeneous solution as it relates only to transients, i.e. what happens in the circuit \emph{before} it reaches steady state.
+
+Now we have a complex number. $\displaystyle V_p = \frac{V_i}{1 + j \omega RC}$ is the \emph{complex amplitude}, which is an extremely useful variable. We'll see later that it can describe the entire frequency-domain behavior of the circuit to sinusoidal input, \emph{and} most time-domain behavior as well.\\
+
+However, remember that our goal was to find the response to sinusoidal input, not exponential input as we've actually done! What is the connection?\\
+The answer lies in Euler's formula, which states
+
+\[ e^{j \omega t} = \cos{(\omega t)} + j \sin{(\omega t)} \]
+
+which can be proved e.g. via Taylor series.
+
+Thus, we can take the real part of the exponential input, to yield the input we sought after:
+
+\[ V_i \cos{(\omega t)} = Re\left[ V_i e^{j \omega t} \right] \]
+
+where Re[z] gives the real part of the complex number $z$, i.e. $Re[x + jy] = x$.
+
+Thus, we can use a ``inverse superposition'' argument: for linear circuits, the response to the input $Re[z]$ should be of the form $Re[f(z)]$. That is, the real part of the output should be a function of the real part of the input.\\
+
+\subsection{Time-domain analysis}
+
+I promised earlier that $V_p$ could describe the time domain behaviour of the circuit. Let's see how! Also note that we will soon see a much faster and easier method of writing $V_p$ down, than to work with the differential equations for a circuit.\\
+
+The relation between $V_p$ and the time-domain behavior of the circuit is:
+
+\[ v_C(t) = \left| V_p \right| \cos{(\omega t + \angle V_p)} \]
+
+Note that we derived the time-domain behavior for the circuit simply by taking the magnitude and angle of the complex amplitude $V_p$. However, the above equation only specifies the relation, without using circuit values (i.e. $R$, $C$ and $V_i$). Let's calculate the magnitude and phase angles.
+
+\[ | V_p | = \left| \frac{Vi}{1 + j \omega RC} \right| = \frac{|V_i|}{|1 + j \omega RC|} \]
+
+The magnitude of $V_i$ is simply the absolute value, and so we'll leave it as-is and assume it is positive.\\
+The denominator is a complex number, and so we calculate the magnitude as always with complex numbers:
+
+\[ |a + jb| = \sqrt{a^2 + b^2} \]
+\[ |1 + j \omega R C| = \sqrt{1 + (\omega R C)^2} \]
+
+Combining the two answers:
+
+\[ |V_p| = \frac{Vi}{\sqrt{1 + (\omega R C)^2}} \]
+
+Thus step one is complete. Next, let's find the phase angle.\\
+The angle of divided complex numbers subtracts (while magnitude divides). The angle of $V_i$, being fully real, is 0. (The angle of a fully imaginary number is $\displaystyle \frac{\pi}{2}$, since the imaginary axis is the up/down axis, and $\displaystyle \frac{\pi}{2}$ is the number of radians to rotate from the real (x) to the imaginary (y) axis.)\\
+
+\begin{align*}
+  \angle V_p &= \angle V_i - \angle (1 + j \omega R C) \\ 
+  &= 0 - \arctan{(1, \omega R C)} \\
+  &= -\arctan{(1, \omega R C)}
+\end{align*}
+
+... where arctan is the two-argument arctan function. $\arctan{(x, y)}$ is equal to $\displaystyle \arctan{(\frac{y}{x})}$ for some inputs, but not all, which is why the two-argument one (also known as ``atan2'' in many programming languages) is used; the regular form can't differentiate between quadrants uniquely.\\
+
+Thus, combining the time-domain equation with the now-known values of $|V_p|$ and $\angle V_p$:
+
+\[ v_C(t) = \left| V_p \right| \cos{(\omega t + \angle V_p)} \]
+\[ v_C(t) = \frac{Vi}{\sqrt{1 + (\omega R C)^2}} \cos{(\omega t - \arctan{(1, \omega R C)} )} \]
+
+As for the frequency response, we can also calculate and plot the magnitude of the \emph{transfer function}, i.e. the ratio between the capacitor voltage and the input voltage.
+
+\[ \left| \frac{V_p}{V_i} \right| = \left| \frac{1}{1 + j \omega R C} \right| = \frac{1}{\sqrt{1 + (\omega R C)^2}} \]
+
+... and the same goes for the phase of the transfer function:
+
+\[ \angle \frac{V_p}{V_i} = \angle \left( \frac{1}{1 + j \omega R C} \right) = \angle 1 - \angle (1 + j \omega R C) = 0 - arctan(1, \omega R C) = -arctan(1, \omega R C) \] 
+
+Now that we know how to find the magnitude and phase of the complex amplitude rather easily (compared to solving the differential equations!), let's see if we can find an easier way to writing the expression down in the first place, so that we can solve linear circuits with resistors, capacitors and inductors in no-time.
+
+\section{The Impedance Model}
+For the resistor, Ohm's law applies equally well to the complex amplitudes of voltages and currents as it does to the usual inputs:
+
+\[ V_r = I_r \cdot R \]
+
+However, the interesting things turn up when we look at the capacitor and inductor. Let's consider a lone capacitor and its relation between current and voltage.\\
+
+\begin{circuitikz}
+\draw (0,0) to [C=$C$, v>=$v_C$, i<=$i_C$] (0,3);
+\end{circuitikz}
+
+We know from earlier that
+
+\[ i_C = C \frac{dv_C}{dt} \]
+
+But what happens when we use complex amplitudes instead? Say the current is of the form $\displaystyle I_c e^{s t}$ and the voltage across it of the form $V_c e^{st}$ - what then? Well, let's see. We start by substituting the values:
+
+\[ I_c e^{st} = C \frac{d V_c e^{s t}}{dt} \]
+
+Perform the differentiation:
+
+\[ I_c e^{s t} = C V_c s e^{st} \]
+
+Cancel out the $\displaystyle e^{s t}$ terms from both sides, and solve for $V_c$:
+
+\[ I_c \cancel{e^{s t}} = C V_c s \cancel{e^{st}} \]
+\[ I_c = C V_c s \]
+\[ V_c = \frac{1}{sC} I_c \]
+
+Hmm, it looks like they have a very simple relation indeed! To simplify even further, let's set $\displaystyle Z_c = \frac{1}{sC}$:
+
+\[ V_c = Z_c I_c \]
+
+Incredible! The voltage is proportional to the current through this $Z_c$ variable, just like a resistor's voltage drop is $V = IR$!\\
+$Z_c$ is known as the capacitor's \emph{impedance}, and is frequency dependant: remember that $\displaystyle Z_c = \frac{1}{sC}$, and $s = j \omega$, where $\omega$ denotes the angular frequency of the input sinusoid. Therefore, we see that the higher the frequency, the lower the impedance.\\
+What this means is that the capacitor will have high impedance - which is similar (but not equal!) to high resistance - to low-frequency signals, to the point where it completely blocks DC ($\omega = 0$), but has a low impedance for high-frequency signals. As the frequency increases, the capacitor impedance decreases, and as $\omega \to \infty$, the impedance goes to zero and the capacitor acts as a short circuit.\\
+
+Let's see how an inductor deals with this.\\
+
+\begin{circuitikz}
+\draw (0,0) to [L=$L$, v>=$v_L$, i<=$i_L$] (0,3);
+\end{circuitikz}
+
+Again, we know that
+
+\[ v_L = L \frac{di_L}{dt} \]
+
+Let's see what happens for complex input, where $v_L = V_l e^{st}$ and $i_L = I_l e^{s t}$:
+
+\[ V_l e^{s t} = L \frac{d I_l e^{s t}}{dt} \]
+
+Same as before; we perform the differentiation, cancel out the $e^{st}$ terms, and solve for $V_l$:
+
+\[ V_l e^{s t} = L \frac{d I_l e^{s t}}{dt} \]
+\[ V_l e^{s t} = L I_l s e^{s t} \]
+\[ V_l \cancel{e^{s t}} = L I_l s \cancel{e^{s t}} \]
+\[ V_l = L I_l s \]
+\[ V_l = I_l \cdot s L \]
+
+Again, the voltage is related to the current through a simple algebraic expression! The impedance of the inductor is $Z_L = sL$, where (again) $s = j \omega$.
+
+\[ V_l = Z_L I_l \]
+
+This is an incredible powerful technique, as we'll soon see. We can now write down the frequency (and time) behaviour of circuits by inspection, without writing a single differential equation!\\
+Impedances not only look like resistances (impedance times current equals voltage), but can be used in the same way, to create things like voltage dividers using capacitors and inductors! This is the basis of \emph{filters}, which we'll look at soon.
+
+So, in summary, the relevant models are:\\
+
+\begin{circuitikz}
+\draw (0,0) to [C=$C$, v>=$V_c$, i<=$I_c$] (0,3);
+\draw (2,0) to [L=$L$, v>=$V_l$, i<=$I_l$] (2,3);
+\draw (4,0) to [R=$R$, v>=$V_r$, i<=$I_r$] (4,3);
+\end{circuitikz}
+
+Where the relations between voltage amplitudes and current amplitudes are given as
+
+\[ V_r = I_r Z_R \]
+\[ V_c = I_c Z_L \]
+\[ V_l = I_l Z_L \]
+
+... and the impedences are given as
+
+\[ Z_R = R \]
+\[ Z_C = \frac{1}{j\omega C} \]
+\[ Z_L = j \omega L \]
+
+These impedances can be used exactly as resistances. For example, in a series RC circuit, the current through the circuit is given by
+\[ \frac{V_i}{R + Z_C} \]
+just as you would expect.
+
+\subsection{RC circuit example}
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sV=$V_i$] (0,3)
+					  to [R=$R$]     (3,3)
+					  to [C=$Z_C$, v<=$V_c$]	(3,0);
+\draw (3,0) to (0,0);
+\end{circuitikz}
+
+Let's analyze the above circuit, to find the voltage across the capacitor. The impedance is $Z_C = \frac{1}{sC}$, and we can use that to create a voltage divider relationship:
+
+\[ V_c = V_i \cdot \frac{Z_C}{Z_C + R} = V_i \cdot \frac{ \frac{1}{sC} }{ \frac{1}{sC} + R} \]
+
+Let's multiply out by $\displaystyle \frac{sC}{sC}$ to clean things up:
+
+\[ V_c = V_i \cdot \frac{1}{1 + sRC} \]
+
+This is another HUGE result; look at the denominator: what he have there is the characteristic equation for the series RC circuit! We can use that to find everything we want to know about the time-domain behavior of the circuit, such as the natural frequency, bandwidth, damping factor and more - without a single differential equation; not to mention that the same technique works in more complex circuits, such as a series-parallel combination of resistors, capacitors and inductors!
+
+\subsection{Impedance Model Summary}
+Before trying a few more complex circuits, let's summarize the method we'll use, and clarify the meaning of a few variables.
+
+\begin{enumerate}
+\item Replace sinusoidal sources by their complex amplitudes. For example, $v_I \cos{(\omega t)}$ would simply become $V_i$, which represents a complex amplitude (capital letter, small subscript).
+\item Replace the elements with their impedance models; resistors don't change, capacitors turn in to $\displaystyle Z_C = \frac{1}{sC} $ ``resistors'' and inductors into $Z_L = sL$ ``resistors'', where $s = j \omega$.
+\item Calculate the complex amplitudes for the nodes that matter, using the normal circuit analysis methods e.g. the node method, Thevenin equivalents, etc, treating impedances exactly as resistances.
+\item If necessary, find the time-domain behavior from the complex amplitudes: if you have the complex amplitude $V_a$, the time-domain behavior of that amplitude is described by 
+
+\[ v_A(t) = |V_a| \cos{(\omega t + \angle V_a)} \]
+
+\end{enumerate}
+
+
+\subsection{Finding the characteristic equation}
+
+What we generally want to do here is to write the expression as a proper polynomial: no $\displaystyle \frac{1}{s}$ terms are allowed, and the denominator must be of a higher degree than the numerator. Note that there may be $s$ terms in the numerator, which are then to be ignored, if the polynomial is in proper form.\\
+As an example, let's look at the \emph{parallel} RLC circuit, to avoid overfocusing on the series one.\\
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sI=$I_s$] (0,3);
+\draw (0,3) to (2,3);
+\draw (2,3) to [R=$R$] (2,0);
+\draw (2,3) to (4,3);
+\draw (4,3) to [C=$C$] (4,0);
+\draw (4,3) to (6,3);
+\draw (6,3) to [L=$L$] (6,0);
+
+\draw (6,0) to (0,0);
+
+\draw (6,0) to [short, -o] (8,0);
+\draw (6,3) to [short, -o] (8,3);
+\draw (8,3) to [open, v=$V_o$] (8,0);
+
+\end{circuitikz}
+
+Note that the source is a sinusoidal \emph{current source}.
+
+The impedance $Z$ seen by the current source is given by
+
+\[ Z = R \, || \, \frac{1}{sC} \, || \, sL = \frac{1}{ \frac{1}{R} + \frac{1}{sL} + sC} \]
+
+Let's start off by multiplying everything by $sL$, to get rid of the improper $s$:
+
+\[ Z = \frac{sL}{\frac{1}{R} sL + 1 + s^2 LC} \]
+
+Next, divide by LC to get $s^2$ by itself (as usual, we want the form $s^2 + 2\alpha s + {\omega_0}^2$):
+
+\[ Z = \frac{\frac{1}{C} s}{  \frac{1}{RC} s + \frac{1}{LC} + s^2} \]
+\[ Z = \frac{\frac{1}{C} s}{ s^2 + \frac{1}{RC} s + \frac{1}{LC}} \]
+
+Are we done? Well, the $s^2$ is on its own, we have a term multiplying $s$, and a term independant of $s$. Also, we have nothing on the form $\displaystyle \frac{1}{s}$\footnote{Except the entire denominator, of course.}, and the denominator is of higher degree than the numerator. We're done!\\
+
+Thus, comparing the denominator with the canonical form $s^2 + 2\alpha s + {\omega_0}^2$, we see that, for the parallel RLC circuit:
+
+\[ \alpha = \frac{1}{2RC} \text { rad/s}\]
+\[ \omega_0 = \frac{1}{\sqrt{LC}} \text{ rad/s} \]
+\[ f_0 = \frac{1}{2\pi \sqrt{LC}} \text { Hz} \]
+\[ \Delta \omega = 2 \alpha = \frac{1}{RC} \]
+\[ Q = \frac{\omega_0}{2\alpha} = \frac{RC}{\sqrt{LC}} \]
+
+
+\subsection{Series RLC circuits}
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sV=$V_i$] (0,3)
+                     to [L=$L$, v<=$V_l$]     (2,3)
+					  to [C=$C$, v<=$V_c$]     (4,3)
+					  to [R=$R$, v<=$V_r$, i>=$I$]	(4,0);
+\draw (4,0) to (0,0);
+\end{circuitikz}
+
+Say we want to find the voltage amplitude across the resistor for this circuit. Doing so is very easy; we use a voltage divider again:
+
+\[ V_r = V_i \cdot \frac{R}{R + Z_C + Z_L} = V_i \cdot \frac{R}{R + \frac{1}{sC} + Ls} \]
+
+Easy! We can clean it up a bit by multiplying by $\displaystyle \frac{s}{L}$ (why did I pick $\displaystyle \frac{s}{L}$? Because I know what will happen.):
+
+\[ V_r = V_i \cdot \frac{\frac{R}{L} s}{ \frac{R}{L} s + \frac{1}{LC} + s^2} \]
+
+Note that we have \emph{again} found the characteristic equation of this circuit (in the denominator), again without writing a differential equation!\\
+Also, if we want the time domain behavior, we substitute $s = j\omega$ into the first equation above, rationalize the denominator by multiplying top and bottom by the complex conjugate of the bottom, and take the magnitude and phase:
+
+\begin{align*}
+v_R(t) &= |V_r| \cos{(\omega t + \angle V_r)} 
+     = 
+      \left| V_i \cdot \frac{j\omega RC}{1 - LC \omega^2 + j\omega RC} \right| 
+      \cos{(\omega t + 
+      \angle \left( V_i \cdot \frac{j\omega RC}{1 - LC \omega^2 + j\omega RC} \right) )} \\
+    &= \frac{V_i \omega R C}{\sqrt{(1 - LC\omega^2)^2 + (\omega RC)^2}} \cos{(\omega t + (\frac{\pi}{2} - \arctan{(1 - LC\omega^2, \omega RC)}))}
+\end{align*}
+
+... where the magnitude is given by the magnitude of $j V_i \omega R C$ divided by the magnitude of the denominator, a complex number: such a magnitude is given by $\sqrt{a^2 + b^2}$ where $a$ is the real part and $b$ the imaginary part.\\
+The angle is given by the angle of the numerator \emph{minus} (not divided by) the denominator; the angle of the numerator is $\displaystyle \frac{\pi}{2}$ because $j V_i \omega R C$ is not complex, but fully imaginary, and thus located 90 degrees ($\displaystyle \frac{\pi}{2}$ radians) rotated from the origin. The angle of the denominator is given by $\arctan{(a, b)}$ where $a$ and $b$ are the real and imaginary parts, respectively.
+
+
+
+\newpage
+\section{Filters}
+
+Filters are a great application of the impedance model. Filters are circuits (some simple, some complex) that attenuate certain frequency bands. For example, a low-pass filter removes high frequencies, but lets low frequencies through.\\
+
+Here is a simple RC low-pass filter (the part values might be unrealistic, but they make for round numbers in the results):
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sV=$V_i$] (0,3)
+					  to [R=$\displaystyle \frac{50}{\pi} \Omega$]     (3,3)
+					  to [C=$1 \mu F$]	(3,0);
+\draw (3,0) to [short, -o] (5,0);
+\draw (3,3) to [short, -o] (5,3);
+\draw (5,3) to [open, v=$V_o$] (5,0);
+\draw (3,0) to (0,0);
+\end{circuitikz}
+
+Filter characteristics are often shown as a pair of plots, known as Bode plots. One shows the magnitude as a function of frequency, and the other the \emph{phase} as a function of frequency.\\
+For example, see these Bode plots of a low-pass filter:
+
+%%%% Magnitude plot source code (Mathematica) %%%
+\begin{comment}
+LogLogPlot[
+ {1/Sqrt[1 + ((\[Omega]*(2*Pi)) R c)^2],
+   1/Sqrt[2]}
+ , {\[Omega], 10, 10^6},
+  PlotStyle -> {Blue, {Red, Dotted}},
+ AxesLabel -> {Hz, 
+   "|\!\(\*SubscriptBox[\(V\), \(o\)]\)/\!\(\*SubscriptBox[\(V\), \(i\
+\)]\)|"},
+ GridLines -> {{10^4}, None},
+ GridLinesStyle -> Dotted]
+\end{comment}
+%%% End magnitude plot source code %%%
+
+\includegraphics[scale=1.75]{Graphics/lpf_magnitude_plot}
+
+%%% Phase plot source code (Mathematica) %%%
+\begin{comment}
+LogLinearPlot[
+ {-ArcTan[1, (\[Omega]*2*Pi) R c] * 180/Pi,
+   -45}
+ , {\[Omega], 10, 10^6},
+  PlotStyle -> {Blue, {Red, Dotted}},
+ AxesLabel -> {Hz, "Degrees"},
+ GridLines -> {{10^4}, None},
+ GridLinesStyle -> Dotted,
+ PlotRange -> Full,
+ Ticks -> {Automatic, Union[{-45}, Range[0, -90, -10]]}]
+\end{comment}
+%%% End phase plot source code %%%
+
+\includegraphics[scale=1.75]{Graphics/lpf_phase_plot}
+
+The filter above has a \emph{break frequency} (also known as corner frequency, -3 dB point or $\displaystyle \frac{1}{\sqrt{2}}$ point) of 10 kHz, which means frequencies higher than 10 kHz will get attenuated. As you can see, however, the attenuation starts off lower than 10 kHz. The break frequency is the frequency where the magnitude drops to 3 dB below unity (1x the input), which equals $\displaystyle \frac{1}{\sqrt{2}}$ times unity, here shown by a pair of dotted lines. The break frequency is also where the phase shift of the signal is exactly -45 degrees (for this circuit).\\
+
+There are 4 main types of filters: low-pass, high-pass, band-pass and band-stop. The names explain them quite well; low-pass filters let low frequencies through, but blocks higher ones, while high-pass is the exact opposite. Band-pass lets a \emph{band} of frequencies through, but blocks both lower and higher frequencies. Band-stop are opposite of band-pass; they let everything \emph{except} a band of frequencies through.
+
+\subsection{Series RLC band-pass filter}
+
+Since producing good-looking Bode plots for this document takes a while with my current process, I'll only make a few, by focusing on a RLC band-pass filter.
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sV=$V_i$] (0,3)
+					  to [L=$L$]     (3,3)
+					  to [C=$C$]     (6,3)
+					  to [R=$R$]	(6,0);
+\draw (6,0) to [short, -o] (8,0);
+\draw (6,3) to [short, -o] (8,3);
+\draw (8,3) to [open, v=$V_o$] (8,0);
+\draw (6,0) to (0,0);
+\end{circuitikz}
+
+First, let's think about how this filter works intuitively.\\
+The inductor will let low frequencies through, but block high frequencies. Thus, at high frequencies, most of the circuit's voltage drop will be across the inductor, so the filter blocks them.\\
+The capacitor will let the high frequencies pass with low impedance, but instead block low frequencies.\\
+However, there is a band of frequencies somewhere in the middle that they both let through, so this is a \emph{band-pass} filter.\\
+
+Since this is a series circuit, we can yet again use a simple voltage divider relation to write the transfer function $\displaystyle \frac{V_o}{V_i}$:
+
+\[ \frac{V_o}{V_i} = \frac{R}{R + j\omega L + \frac{1}{j\omega C}} \]
+
+Let's clean it up a bit by multiplying through by $j\omega C$.
+
+\[ \frac{V_o}{V_i} = \frac{R}{R + j\omega L + \frac{1}{j\omega C}} \cdot \frac{j\omega C}{j\omega C} \]
+\[ \frac{V_o}{V_i} = \frac{j\omega RC}{1 - \omega^2 LC + j\omega RC} \]
+
+We can now calculate the magnitude and phase of the transfer function, and plot it.
+
+\[ \left| \frac{V_o}{V_i} \right| = \frac{\omega RC}{\sqrt{(1 - \omega^2 LC)^2 + (\omega RC)^2}} \]
+\[ \angle \frac{V_o}{V_i} = \frac{\pi}{2} - \arctan{(1 - \omega^2 LC, \omega RC)} \]
+
+Here are the Bode plots for this circuit for $L = 1 \mu H$, $C = 1 \mu F$ and $R = 20 \Omega$:
+
+%%% Mag. plot source %%%
+\begin{comment}
+LogLogPlot[{mag, 1/Sqrt[2]}, {\[Omega], 10, 10^9}, 
+ PlotStyle -> {Blue, {Red, Dotted}}, 
+ AxesLabel -> {Hz, 
+   "|\!\(\*SubscriptBox[\(V\), \(o\)]\)/\!\(\*SubscriptBox[\(V\), \
+\(i\)]\)|"}, 
+ GridLines -> {{3.1910*10^6, 7937.95, 1/(2*Pi*Sqrt[L*c])}, None}, 
+ GridLinesStyle -> Dotted]
+\end{comment}
+%%% End mag plot source %%%
+
+\includegraphics[scale=1.75]{Graphics/bpf_magnitude_plot}
+
+The dotted red line is at $\displaystyle \frac{1}{\sqrt{2}}$. The dotted vertical lines are, from left to right, the low-end break frequency $f_1$, the resonant frequency $\displaystyle f_0 = \frac{1}{2\pi \sqrt{LC}}$ and the high-end break frequency $f_2$.\\
+Note that the $f$ notation instead of $\omega$ indicates that the frequencies are in hertz, rather than rad/s.
+
+%%% Phase plot source %%%
+\begin{comment}
+
+LogLinearPlot[{(\[Pi]/2 - 
+     ArcTan[1 - (\[Omega]*2*Pi)^2 L c, (\[Omega]*2*
+         Pi) R c])*(180/\[Pi]), 45, -45, 0}, {\[Omega], 10, 10^9}, 
+ PlotStyle -> {Blue, {Red, Dotted}, {Red, Dotted}, {Red, Dotted}}, 
+ AxesLabel -> {Hz, "Degrees"}, GridLinesStyle -> Dotted, 
+ PlotRange -> Full, 
+ Ticks -> {Automatic, Union[{-45, 45}, Range[90, -90, -10]]},
+ GridLines -> {{3.1910*10^6, 7937.95, 1/(2*Pi*Sqrt[L*c])} , None}]
+\end{comment}
+%%% End phase plot source %%%
+
+\includegraphics[scale=1.75]{Graphics/bpf_phase_plot}
+
+The dotted red lines are at 45, 0 and -45 degrees. The dotted vertical lines are, from left to right, the low-end break frequency $f_1$, the resonant frequency $\displaystyle f_0 = \frac{1}{2\pi \sqrt{LC}}$ and the high-end break frequency $f_2$.\\
+
+These plots show two break frequencies, at roughly 7.94 kHz and 3.19 MHz, respectively. (I have no idea where such a filter could be useful, however; the circuit values could've been better chosen for this example!)\\
+The break frequencies can be found by setting the magnitude equation equal to $\displaystyle \frac{1}{\sqrt{2}}$ and solving for $\omega$ (keep in mind that $\omega$ is in rad/s; the plots are in hertz).\\
+
+\newpage
+
+\subsection{Q and ``peakiness''}
+Something interesting happens if we observe the capacitor voltage of a high-Q RLC circuit near the resonant frequency.
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sV=$V_i$] (0,3)
+					  to [L=$L$]     (3,3)
+					  to [C=$C$, v=$V_c$]     (6,3)
+					  to [R=$R$]	(6,0);
+\draw (6,0) to (0,0);
+\end{circuitikz}
+\\
+
+%%%% Magnitude plot source code (Mathematica) %%%
+\begin{comment}
+Manipulate[
+ LogLogPlot[{1/Sqrt[(1 - c L \[Omega]^2)^2 + (\[Omega] R c)^2], 
+   1/Sqrt[2], 1/Sqrt[L*c] * L/R}, {\[Omega], 10, 10^6}, 
+  PlotStyle -> {Blue, {Red, Dotted}, {Red, Dotted}}, 
+  AxesLabel -> {Hz, 
+    "|\!\(\*SubscriptBox[\(V\), \(o\)]\)/\!\(\*SubscriptBox[\(V\), \
+\(i\)]\)|"}, GridLines -> {None, None}, GridLinesStyle -> Dotted, 
+  PlotRange -> Full]
+ , {R, 0.01, 1000}, {c, 10^-9, 10^-6}, {L, 10^-9, 10^-3}]
+
+% Values used: R = 7.5, c = 4 * 10^-7, L = 0.75 * 10^-3 which causes Q ~ 5.7735
+\end{comment}
+%%% End magnitude plot source code %%%
+
+\includegraphics[scale=1.75]{Graphics/lpf_peakiness}
+
+The above Bode plot shows the magnitude of the capacitor voltage/input voltage ratio for the values $R = 7.5 \Omega$, $L = 0.75$ mH, $c = 400$ nF, which causes $\displaystyle f_0 = \frac{1}{2\pi \sqrt{0.75\cdot10^{-3} \cdot 400 \cdot 10^{-9} }} \approx 9.19$ kHz and $\displaystyle Q = \frac{0.75 \cdot 10^{-3}}{7.5 \sqrt{0.75 \cdot 10^{-3} \cdot 400 \cdot 10^{-9}}} \approx 5.7735$.\\
+The dotted red lines are at $\displaystyle \frac{1}{\sqrt{2}}$ and $Q$, while the dotted grey line is at $f_0 \approx 9.19$ kHz.\\
+
+This phenomenon is actually not as strange as it may appear. Q is the ratio of stored energy in a circuit to the energy dissipated per cycle, so at high Q values, more energy is added by the source than is dissipated by the resistor, so the voltage builds up over time, to be greater than the input amplitude (specifically $Q$ times greater).
+
+Let's derive this mathematically. Again, this was for the voltage over the capacitor, so we need to calculate the magnitude of that. Yet again we used a voltage divider relation:
+
+\[ \frac{V_c}{V_i} = \frac{\frac{1}{sC}}{\frac{1}{sC} + sL + R} \]
+
+Multiply across by $sC$ to clean up:
+
+\[ \frac{V_c}{V_i} = \frac{1}{1 + s^2LC + sRC} \]
+
+Let's divide through by $LC$, too:
+
+\[ \frac{V_c}{V_i} = \frac{\frac{1}{LC}}{s^2 + \frac{R}{L} s + \frac{1}{LC}} \]
+
+There's the characteristic equation again. We know (from memory, but also from comparing the above to $s^2 + 2\alpha s + {\omega_0}^2$) that $\displaystyle \frac{1}{LC} = {\omega_0}^2$, and the same goes for $\displaystyle 2 \alpha = \frac{R}{L}$.
+
+\[ \frac{V_c}{V_i} = \frac{{\omega_0}^2}{s^2 + 2 \alpha s + {\omega_0}^2} \]
+
+$s = j\omega$; however, let's evaluate the above expression at the resonant frequency, i.e. $\omega = \omega_0$, so we make the substitution for $s = j\omega_0$:
+
+\[ \frac{V_c}{V_i} = \frac{{\omega_0}^2}{(j\omega_0)^2 + 2 \alpha j\omega_0 + {\omega_0}^2} \]
+
+$j^2$ is $-1$, so:
+
+\[ \frac{V_c}{V_i} = \frac{{\omega_0}^2}{-{\omega_0}^2 + 2 \alpha j\omega_0 + {\omega_0}^2} \]
+
+Each term has an $\omega_0$, so we can cancel them out. 
+
+\[ \frac{V_c}{V_i} = \frac{{\omega_0}}{-{\omega_0} + j 2 \alpha + {\omega_0}} \]
+
+
+Also, note that we have $-\omega_0 +\omega_0$ remaining, so we remove those as well:
+
+\[ \frac{V_c}{V_i} = \frac{{\omega_0}}{j 2 \alpha} \]
+
+We then take the magnitude of this expression, that (remember what we're doing!) shows the ratio of the capacitor voltage to the input, at the circuit's resonant frequency. The only thing that happens is that $j$ disappears, as its magnitude is $1$:
+
+\[ \left| \frac{V_c}{V_i} \right| = \frac{\omega_0}{2\alpha} = Q \]
+
+Yup! It turns out that the Bode plot is correct: the magnitude of the capacitor voltage at resonance is exactly $Q$ times greater than $V_i$!
+
+
+\subsection{Selectivity and bandwidth}
+The selectivity of a filter is given by 
+\[ \frac{\omega_0}{\Delta \omega} \]
+where $\Delta \omega$ is the \emph{bandwidth} of the filter:
+
+\[ \Delta \omega = \omega_2 - \omega_1 \]
+where $\omega_1$ and $\omega_2$ are the $\displaystyle \frac{1}{\sqrt{2}}$ points of the filter (see above).\\
+For the filter above:
+
+\[ \omega_0 = \frac{1}{2\pi \sqrt{LC}} = 159.2 \text{ kHz} \]
+\[ \omega_1 = 7.938 \text{ kHz} \]
+\[ \omega_2 = 3.191 \text { MHz} \]
+\[ \Delta \omega = \omega_2 - \omega_1 = 3.183 \text{ MHz} \]
+\[ \frac{\omega_0}{\Delta \omega} \approx 0.05 \]
+
+Let's try to find $\displaystyle \frac{\omega_0}{\Delta \omega}$ in terms of circuit parameters, e.g. R, C, L and so on.\\
+To begin with, we set the magnitude equation equal to $\displaystyle \frac{1}{\sqrt{2}}$. We solve it, and take the two positive solutions, $\omega_2$ and $\omega_1$, and subtract them. The result is the bandwidth, $\Delta \omega$.\\
+Of course, we already know that for a series RLC circuit, $\displaystyle \omega_0 = \frac{1}{\sqrt{LC}}$.
+
+\[ \frac{\omega RC}{\sqrt{(1 - \omega^2 LC)^2 + (\omega RC)^2}} = \frac{1}{\sqrt{2}} \]
+
+The solutions $\omega_1$ and $\omega_2$ to the above are quite messy, but when subtracted, the end result is very simple:
+
+\[ \Delta \omega = \omega_2 - \omega_1 = \frac{R}{L} \]
+
+Nice! Let's confirm that the previous result for $\Delta \omega$ matches this one:
+
+\[ \Delta \omega = \omega_2 - \omega_1 = 3.191 \text{ MHz} - 7.938 \text{ kHz} = \frac{20 \Omega}{2\pi \cdot 1 \mu H} \]
+Note that we need to additionally divide by $2 \pi$ to convert from rad/s to hertz. And indeed, the above is true, excepting for rounding errors.\\
+However, there is an additional thing to note here. Remember that $\displaystyle 2 \alpha = \frac{R}{L}$ for a series RLC circuit! Thus the bandwidth $\Delta \omega$ is equal to $2 \alpha$.\\
+Further, remember the definition of Q for the series RLC circuit:
+
+\[ Q = \frac{\omega_0}{2\alpha} \]
+
+We've just shown that $\Delta \omega = 2 \alpha$, so the selectivity of a circuit is given by Q!
+
+Or, in circuit parameters:
+
+\[ Q = \frac{L}{R \sqrt{LC}} \]
+
+
+\subsection{Designing filters}
+Instead of simply analyzing existing circuits, let's design a band-stop filter. Let's say we want it to stop frequencies in the range 1 - 10 kHz. In other words, we want the break frequencies to be at 1 and 10 kHz, respectively, which gives a bandwidth $\Delta \omega$ of 9 kHz.\\
+
+Again, let's approach this intuitively. Clearly, a resistor combined with either a capacitor or inductor won't cut it, since such a circuit can only block either low or high frequencies (as the (ideal) resistor blocks all frequencies equally), not any sort of a combination. Thus we need either a RLC circuit, or some circuit consisting of multiple capacitors/multiple inductors. One solution would indeed be an RLC circuit, where we take the output over the LC pair rather than over the resistor as we did in the band-\emph{pass} filter above:
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [sV=$V_i$] (0,3)
+					  to [R=$R$]     (3,3)
+					  to [L=$L$]     (3,1.5)
+					  to [C=$C$]	(3,0);
+\draw (3,0) to [short, -o] (5,0);
+\draw (3,3) to [short, -o] (5,3);
+\draw (5,3) to [open, v=$V_o$] (5,0);
+\draw (3,0) to (0,0);
+\end{circuitikz}
+
+\ \\
+In this circuit, the LC voltage will be high either when the frequency is low (the capacitor drops a lot of voltage) or high (the inductor drops a lot of voltage), but low at some frequency band in between. Great!\\
+Let's figure out the part values we want, and all that. First, we need to figure out the circuit's transfer function:
+
+\[ \frac{V_o}{V_i} = \frac{sL + \frac{1}{sC}}{R + sL + \frac{1}{sC}} \]
+where $s = j\omega$. We multiply through by $sC$ to get rid of the nested fractions:
+
+\[ \frac{V_o}{V_i} = \frac{s^2LC + 1}{1 + sRC + s^2LC} \]
+
+Hmm, let's clean up that $s^2$ term in the denominator by dividing by LC throughout.
+
+\[ \frac{V_o}{V_i} = \frac{s^2 + \frac{1}{LC}}{\frac{1}{LC} + \frac{R}{L} s + s^2} \]
+
+There's the characteristic equation for this circuit (in the denominator). If we match it up with the canonical form $s^2 + 2\alpha s + {\omega_0}^2$, we find that
+
+\[ 2\alpha = \frac{R}{L} \]
+\[ \alpha = \frac{R}{2L} \]
+\[ {\omega_0}^2 = \frac{1}{LC} \]
+\[ \omega_0 = \frac{1}{\sqrt{LC}} \]
+
+This isn't really news, since we knew the values of $\alpha$ and $\omega_0$ for the series RLC circuit already, but it's nice to know we can find them easily. Let's find out the values of $Q$ and $\Delta \omega$, the bandwidth:
+
+\[ Q = \frac{w_0}{2\alpha} = \frac{ \frac{1}{\sqrt{LC}} }{ \frac{R}{L} } = \frac{L}{R\sqrt{LC}} \]
+\[ \Delta\omega = 2 \alpha = \frac{R}{L} \]
+
+Then, let's calculate the magnitude and phase equations. Let's go back to the form we had before we divided through by LC, since it looks a bit cleaner. Let's then make the substitution for $s = j\omega$, and see what happens:
+
+\[ \frac{V_o}{V_i} = \frac{s^2LC + 1}{1 + sRC + s^2LC} \]
+\[ \frac{V_o}{V_i} = \frac{(j\omega)^2 LC + 1}{1 + j\omega RC + (j\omega )^2 LC} \]
+\[ \frac{V_o}{V_i} = \frac{1 - \omega^2 LC}{1 - \omega^2 LC + j\omega RC} \]
+
+I simply made the substitution, then sorted the terms to be real followed by imaginary, to make things easier in the next step. We're now ready to calculate the magnitude and phase $\displaystyle \left| \frac{V_o}{V_i} \right|$ and $\displaystyle \angle \frac{V_o}{V_i}$:
+
+\[ \displaystyle \left| \frac{V_o}{V_i} \right| = \frac{|1 - \omega^2 L C|}{\sqrt{(1 - \omega^2 LC)^2 + (\omega RC)^2}} \]
+\[ \displaystyle \angle \frac{V_o}{V_i} = 0 - \arctan{(1 - \omega^2 LC, \omega RC)} \]
+
+Now we're getting somewhere. Let's see, what were our requirements? We wanted the filter to block out 1 - 10 kHz (i.e. we want a 9 kHz bandwidth for the blocked frequencies). Let's set the break frequencies at those two points.\\
+Let's choose $R = 10 \Omega$, to reduce the variable count and make the rest more easily doable.
+
+We need to find the break frequencies in terms of the circuit variables. To do so, we set the magnitude equation equal to $\displaystyle \frac{1}{\sqrt{2}}$ and solve:
+
+\[ \frac{|1 - \omega^2 L C|}{\sqrt{(1 - \omega^2 LC)^2 + (\omega RC)^2}} = \frac{1}{\sqrt{2}} \]
+
+I used Mathematica for this, and got four roots; two of those will give us negative numbers for the frequencies, so they were discarded. The two solutions that remained were, after simplification:
+
+\[ \omega_1 = \frac{2}{RC + \sqrt{4LC + (RC)^2}} \]
+\[ \omega_2 = \frac{R + \sqrt{4\frac{L}{C} + R^2}}{2L} \]
+
+Let's set up a system of equations, where $\omega_1$ is equal to the low break frequency, and $\omega_2$ is equal to the higher one:
+
+\[ \frac{2}{RC + \sqrt{4LC + (RC)^2}} = 2\pi \cdot 10^3 \]
+\[ \frac{R + \sqrt{4\frac{L}{C} + R^2}}{2L} = 2\pi \cdot 10^3 \]
+
+If we solve these simultaneous equations, the answers given are
+\[ L = \frac{R}{1800\pi} \]
+\[ C = \frac{9}{200000\pi R} \]
+
+So, for $R = 10 \Omega$, the values are roughly $L = 0.1768$ mH and $C = 14.324\mu$F.\\
+
+Here are the Bode plots for the resulting filter:
+
+\begin{comment}
+%%% BSF magnitude plot source code
+LogLogPlot[{Abs[1 - (\[Omega]*2*Pi)^2 L c]/
+   Sqrt[(1 - (\[Omega]*2*Pi)^2 L c)^2 + ((\[Omega]*2*Pi) R c)^2], 
+  1/Sqrt[2]}, {\[Omega], 10, 10^6}, 
+ PlotStyle -> {Blue, {Red, Dotted}}, 
+ AxesLabel -> {Hz, 
+   "|\!\(\*SubscriptBox[\(V\), \(o\)]\)/\!\(\*SubscriptBox[\(V\), \
+\(i\)]\)|"}, GridLines -> {{10^3, 10^4}, None}, 
+ GridLinesStyle -> Dotted, PlotRange -> {{10, 10^6}, {0.01, 1}}]
+%%% End source
+\end{comment}
+
+\includegraphics[scale=1.4]{Graphics/bsf_magnitude_plot}
+
+As with the previous plots, the dotted red line is at $\displaystyle \frac{1}{\sqrt{2}}$ and the dotted grey lines are at the break frequencies, i.e. 1 and 10 kHz.\\
+The $Q$ of this filter is approximately $0.3514$.
+
+\begin{comment}
+%%% BSF phase plot source code
+f[x_] = If[x < -\[Pi]/2, x + \[Pi], x]
+
+LogLinearPlot[{f[-ArcTan[
+      1 - (\[Omega]*2*Pi)^2 L c, (\[Omega]*2*Pi) R c]]*180/Pi, -45, 
+  45}, {\[Omega], 10, 10^6}, 
+ PlotStyle -> {Blue, {Red, Dotted}, {Red, Dotted}}, 
+ AxesLabel -> {Hz, "Degrees"}, GridLines -> {{10^3, 10^4}, None}, 
+ GridLinesStyle -> Dotted, PlotRange -> Full, 
+ Ticks -> {Automatic, Union[{-45, 45}, Range[90, -90, -10]]}]
+%%% End source
+\end{comment}
+
+\includegraphics[scale=1.4]{Graphics/bsf_phase_plot}
+
+Note the discontinuity in the plot, due to us restricting the valid range of phase values between +90 and -90 degrees.\\
+Without the discontinuity, the phase plot looks like this:
+
+\includegraphics[scale=1.4]{Graphics/bsf_phase_plot_no_disc}
+
+It looks like our filter works! However, there are some caveats here. For one, in actual circuits, it's hard to find $\approx 14 \mu$F capacitors that are suitable for filters, due to nonlinearities in electrolytic capacitors. (Most capacitors with values higher than the low-microfarad range are electrolytics; especially once you get to far higher capacitance values.)\\
+In addition, they are usually polarized, and as such cannot tolerate negative voltages.\\
+Also, the current through this filter will be very high if the signal source has a low impedance.\\
+All in all, however, it pretty much works - not bad for a first-ever try in filter design, especially  considering that low-pass/high-pass filters with only two components are quite a bit easier.
+
+\newpage
+
+\section{Summary of SSS, impedance and filters}
+This chapter dealt with the steady state workings of circuits with sinusoidal input. We learned that, by representing this as an exponential input, we can turn the differential equations governing these circuits into simple algebraic relations: \emph{the impedance model}. In doing so, we not only got access to easy tools for frequency domain analysis of circuits, but also a few that also help us in the time domain, such as the equation for converting a complex amplitude, used in the impedance model, to a time domain representation of the circuit:
+
+\[ v_X(t) = |V_x| \cos{(\omega t + \angle V_x)} \]
+
+The impedances (denoted by $Z$) for the three common passive circuit elements\footnote{There are four such basic elements; the fourth is the memristor, which as of this writing is still under development, with commercial release slated for 2013.} are:
+
+\[ \text{Resistor: } Z_R = R \]
+\[ \text{Capacitor: } Z_C = \frac{1}{j\omega C} \]
+\[ \text{Inductor: } Z_L = j\omega L \]
+
+The most important parameters for filters are:\\
+(Where specific circuit parameters are used, they are for the series RLC circuit. The parameters themselves ($\alpha$, $\Delta \omega$ etc.) apply to all circuits, however.)
+
+\[ \text{Resonant angular frequency: } \omega_0 = \frac{1}{\sqrt{LC}} \text{ rad/s} \]
+\[ \text{Resonant frequency: } f_0 = \frac{1}{2\pi \sqrt{LC}} \text { Hz} \]
+\[ \text{Damping factor: } \alpha = \frac{R}{2 L} \text{ rad/s} \]
+\[ \text{Bandwidth: } \Delta \omega = \omega_2 - \omega_1 = 2 \alpha = \frac{R}{L} \text { rad/s} \]
+\[ Q = \frac{\omega_0}{2 \alpha} \text{ (dimensionless)} \]
+
+Remember that $Q$ can be thought of as multiple things. For a frequency-domain analysis, it is indicative of the how selective the filter is. High Q means high selectivity.\\
+For time-domain analyses, Q indicates how long an underdamped system will ring; also, systems with $\displaystyle Q < \frac{1}{2}$ are overdamped and will not ring at all.
+
+
+%%%%%%%%%%%%%%%%%%%%%
+%%% Miscellaneous %%%
+%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Miscellaneous}
 \section{Impulses and steps}
