@@ -2095,6 +2095,199 @@ That's a fair bit of extra complexity! However, the input op amp will make sure 
 Likewise, the output op amp will make sure virtually no current is drawn from the RC network, so that the load resistance doesn't affect the transfer function.\\
 Assuming ideal op amps, this filter should behave as a passive filter does when there is no load (infinite load resistance) and 0 source resistance. This filter also has (with ideal op amps) infinite input impedance and 0 output impedance!
 
+\section{Op amp current source}
+
+We can use op amps to make very precise current sources. Here's one of several ways to do so:\\
+
+\begin{circuitikz}
+\draw (0,3) node[op amp, yscale=-1] (opamp) {} (0, 0);
+
+% Node voltage labels. Ugly hack!
+\draw (opamp.+) to [open] (-1.3, 3.25) node {$v_+$};
+\draw (opamp.-) to [open] (-1.3, 2.7) node {$v_-$};
+
+% vSET label at the divider
+\draw (2,1) to [open] (2.5,1) node {\quad $v_{SET}$};
+
+% Voltage source, output label, v_- to divider
+\draw (opamp.+) to (-3, 3.5) to [sV=$v_{SET}$] (-3, -1) node [ground] {};
+\draw (opamp.out) to (2, 3);
+\draw (opamp.-) to (-1.4, 2.5) to (-1.4, 1) to (2, 1);
+
+\draw (2, 3) to [R=$R_L$, -*] (2, 1)
+			  to [R=$R_{SET}$, *-]  (2, -1);
+\draw (2, -1) node [ground] {} to (2, -1);
+\end{circuitikz}
+\ \\
+
+Note that the topology above is identical to the noninverting amplifier! I only changed the resistor and voltage source names, to make things more clear.\\
+How does this circuit work? Well, we have negative feedback, as usual. Therefore, we can apply the virtual short method, and see that the voltage across $R_{SET}$ is $v_{SET}$. Therefore, the current through it is $\displaystyle \frac{v_{SET}}{R_{SET}}$.\\
+Since the current into the noninverting input is negligible (even taken as 0 for our model), $R_L$ and $R_{SET}$ are in series, and must share the same current! Therefore, the current through $R_L$ is the same as the current through $R_{SET}$, which the op amp tries to keep equal to $\displaystyle \frac{v_{SET}}{R_{SET}}$ at all times.\\
+
+Of course, there are some limitations. Most op amps have very low current limits, so this will only work for small currents (a few mA, almost certainly less than 40 or so) or when using power op amps rated for high currents. Second, the current can clearly never be larger than the supply voltage divided by $R_{SET} + R_L$, since the supply voltage is the maximum the op amp can have on its output - in theory, in practice the actual maximum output voltage will always be slightly lower than the supply voltage.
+
+\section{Exponential amplifier}
+
+The inverting amplifier topology is extremely versatile, as we've already seen with the integrator and differentiator configurations. We can do more, however! Lets see what happens with a diode in there:\\
+
+\begin{circuitikz}
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5) 
+		to [D, l=$D_1$, i>=$i$] (opamp.-)  (0,2.5);
+\draw (0,0.5) node [ground] {} to [V=$v_I$] (0,2.5);
+		
+\draw (3.8,0.5) node [ground] {} to (opamp.+);
+
+\draw (opamp.-) to [open] (3.35, 3.5) node {$v_-$};
+
+\draw (3.8,3.5) to 
+		[R=$R_1$, v=$v_{R1}$, i>=$i$] (6.2,3.5)  (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+\end{circuitikz}
+
+\ \\
+The analysis is very similar to that of the inverting amplifier and the integrator/differentiator.\\
+
+$v_+$ is grounded, so $v_- \approx 0$ by the virtual short method (since we have negative feedback). Therefore, the voltage across the diode is simply $v_I$. The current through a diode is given by the Shockley diode equation:
+
+\[ i_D = I_S(e^{v_D/V_T} - 1) \]
+
+$I_S$ and $V_T$ are diode parameters. $I_S$ is the ``reverse bias saturation current'', usually a very small value on the order of $10^{-14}$ A, while $V_T$ is the thermal voltage, roughly 25 mV at room temperature.\\
+Now, given that we know the diode voltage drop, we can calculate that the current through it is:
+
+\[ i = I_S(e^{v_I/V_T} - 1) \]
+
+That same current will, as with the previous configurations, be forced to flow through $R_1$ and create a voltage drop across it.\\
+$v_o$ can be seen to be $v_-$ minus the drop across $R_1$, and since $v_-$ is 0:
+\[ v_o = -i \cdot R_1 = -R_1 I_S(e^{v_I/V_T} - 1) \]
+
+The above equation makes it clear that there's an exponential relationship between $v_I$ and $v_o$. For a typical silicon diode at room temperature, with $R_1 = 1000 \Omega$, we can estimate(!) the relationship as
+
+\[ v_o = -10^{-11} \cdot e^{v_I/0.025} \]
+Note that the last ``1'' was dropped, as its value was $10^{-11}$ A, a current which is insignificantly small to us.\\
+Though the $10^{-11}$ term looks like it might dominate, it does not; the exponential increases extremely fast, and the output voltage goes below $-100 V$ (remember that it's an inverting amplifier) when the input is still as low as 0.75 volts. Of course, the op amp will saturate if the power supply voltage doesn't reach that low.
+
+\newpage
+
+\section{Logarithmic amplifier}
+
+By swapping the position of the diode and resistor in the exponential amplifier, we get this schematic:\\
+
+\begin{circuitikz}
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5) 
+		to [R, l=$R_1$, i>=$i$] (opamp.-)  (0,2.5);
+\draw (0,0.5) node [ground] {} to [V=$v_I$] (0,2.5);
+		
+\draw (3.8,0.5) node [ground] {} to (opamp.+);
+
+\draw (opamp.-) to [open] (3.35, 3.5) node {$v_-$};
+
+\draw (3.8,3.5) to 
+		[D=$D_1$, v=$v_D$, i>=$i$] (6.2,3.5)  (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+\end{circuitikz}
+
+\ \\
+This is still easy to analyze, but there's a bit more math. We still use the diode equation, but this time, we need to solve the equation for $v_D$ before we can use it to calculate a voltage drop given a current (the form we have only calculates current from a known voltage).\\
+
+Again, the Shockley diode equation is
+
+\[ i_D = I_S(e^{v_D/V_T} - 1) \]
+
+The current $i_D$ through the diode will be given by the current through $R_1$, which is $\displaystyle \frac{v_I - v_-}{R_1}$. As $v_-$ is 0 via the virtual short (this should be second nature at this point!), the current is simply given by $\displaystyle \frac{v_I}{R}$, so let's make that substitution. Then,
+we will need to solve the equation for $v_D$. Let's start by distributing the $I_S$, and getting the exponential on its own:
+
+\[ \frac{v_I}{R} = I_S(e^{v_D/V_T} - 1) \]
+\[ \frac{v_I}{R} = I_S \cdot e^{v_D/V_T} - I_S \]
+\[ \frac{v_I}{R} + I_S = I_S \cdot e^{v_D/V_T} \]
+
+Divide both sides by $I_S$:
+
+\[ \frac{v_I}{R I_S} + 1 = e^{v_D/V_T} \]
+
+Take the natural log of both sides:
+
+\[ \ln{(\frac{v_I}{R I_S} + 1)} = \frac{v_D}{V_T} \]
+
+And, finally, multiply both sides by $V_T$, and just switch the sides:
+
+\[ v_D = V_T \cdot \ln{(\frac{v_I}{R I_S} + 1)} \]
+
+Now we know how to calculate the diode's voltage drop, which makes us very close to finding $v_o$. We know that $v_o = v_- - v_D$, and that $v_-$ is 0, so
+
+\[ v_o = -v_D \]
+\[ v_o = -V_T \cdot \ln{(\frac{v_I}{R I_S} + 1)} \]
+
+And we are done! This is indeed a logarithmic amplifier.
+
+\section{Active RC filters}
+We can also construct filters that use op amps as part of the actual circuitry, rather than just having them as input/output buffer. Such filters are called \emph{active filters}, and they come in various topologies, where the op amp's function differs.\\
+Here's an example for an active RC filter that we'll analyze in this section:\\
+
+\begin{circuitikz}
+% op amp and output node
+\draw (0,0) node [op amp] (opamp) {};
+\draw (opamp.out) to [short, -o] (3,0) node {\quad\quad $V_o$};
+
+% R2
+\draw (opamp.-) -- (-1.5, 0.5) to [short, *-] (-1.5, 1.5) to [R=$R_2$] (1.5, 1.5) to [short, -*] (1.5, 0);
+
+% C1
+\draw (-1.5, 0.5) to [C=$C_1$] (-3.5, 0.5);
+
+% C2
+\draw (-3.5, 0.5) to [short, *-] (-3.5, 2.5) to [C=$C_2$] (1.5, 2.5) -- (1.5, 1.5);
+
+% R1
+\draw (-3.5, 0.5) to [R=$R_1$] (-5.5, 0.5) -- (-6, 0.5);
+
+% v_I and ground
+\draw (-6, -2) node [ground] {} to [V=$V_i$] (-6, 0) -- (-6, 0.5);
+
+% + is grounded
+\draw (opamp.+) -- (-1.25, -0.5) -- (-1.25, -2);
+\draw (-1.25, -2) node [ground] {};
+
+% Ugly hack for node labels
+\draw (-3.5, 0.5) to [open] (-3.5, 0) node {$v_1$};
+\draw (opamp.-) to [open] (-1.5, 0) node {$v_-$};
+
+\end{circuitikz}
+
+\ \\
+Let's get started. We know that $V_o = A(v_+ - v_-) = -A v_-$.\\
+Let's write node equations for $v_1$ and $v_-$ using the impedance method:
+
+\[ \frac{v_1 - V_i}{R_1} + \frac{v_1 - V_o}{Z_{C2}} + \frac{v_1}{Z_{C1}} = 0 \]
+(since $v_- \approx 0$ via the virtual short technique.)
+and
+
+\[ \frac{- v_1}{Z_{C1}} + \frac{- V_o}{R2} = 0 \]
+(Again, since $v_- \approx 0$ that term disappears, to simplify our calculations.)
+
+After substituting $\displaystyle Z_{C1} = \frac{1}{s C_1}$ and $\displaystyle Z_{C2} = \frac{1}{s C_2}$, we solve the equations for $V_o$ (I used Mathematica), simplify and get
+
+\large
+\[ V_o = - \frac{s C_1 R_2 V_i}{s^2 + \frac{C_1 + C_2}{C_1 C_2 R_2} s + \frac{1}{C_1 C_2 R_1 R_2}} \]
+\normalsize
+
+Comparing the denominator to the canonical form $s^2 + 2\alpha s + {\omega_0}^2$ we get
+
+\[ 2\alpha = \Delta \omega =  \frac{C_1 + C_2}{C_1 C_2 R_2} \]
+\[ \omega_0 = \frac{1}{\sqrt{C_1 C_2 R_1 R_2}} \]
+\[ Q = \frac{\omega_0}{2\alpha} = \frac{\sqrt{C_1 C_2 R_1 R_2}}{R_1 C_1 + R_1 C_2} \]
+
+If we substitute $s = j\omega$ and divide by $V_i$, we get the circuit's transfer function $H(j\omega)$, also simply $\displaystyle \frac{V_o}{V_i}$:
+
+\large
+\[ H(j\omega) = - \frac{j \omega C_1 R_2}{-\omega^2 + \frac{j\omega(C_1 + C_2)}{C_1 C_2 R_2} + \frac{1}{C_1 C_2 R_1 R_2}} \]
+\normalsize
+
 %%%%%%%%%%%%%%%%%%%%%
 %%% Miscellaneous %%%
 %%%%%%%%%%%%%%%%%%%%%
