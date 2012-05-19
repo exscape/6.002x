@@ -28,9 +28,15 @@
 
 % Fix margins and indentation
 \usepackage[cm]{fullpage}
-\addtolength{\oddsidemargin}{-0.75cm}
-\addtolength{\evensidemargin}{-0.75cm}
-\addtolength{\topmargin}{-0.5cm}
+%\addtolength{\oddsidemargin}{-0.75cm}
+%\addtolength{\evensidemargin}{-0.75cm}
+%\addtolength{\topmargin}{-0.5cm}
+\usepackage[
+	top = 1cm,
+	bottom = 2cm,
+	left = 1cm,
+	right = 1cm]{geometry}
+	
 \setlength{\parindent}{0in}
 
 % For circuit diagrams
@@ -1119,6 +1125,8 @@ Since this is a series circuit, we can yet again use a simple voltage divider re
 
 \[ \frac{V_o}{V_i} = \frac{R}{R + j\omega L + \frac{1}{j\omega C}} \]
 
+(Side note: the transfer function, also system function, is often denoted H(s) or H(j$\omega$).)
+
 Let's clean it up a bit by multiplying through by $j\omega C$.
 
 \[ \frac{V_o}{V_i} = \frac{R}{R + j\omega L + \frac{1}{j\omega C}} \cdot \frac{j\omega C}{j\omega C} \]
@@ -1433,6 +1441,659 @@ The most important parameters for filters are:\\
 Remember that $Q$ can be thought of as multiple things. For a frequency-domain analysis, it is indicative of the how selective the filter is. High Q means high selectivity.\\
 For time-domain analyses, Q indicates how long an underdamped system will ring; also, systems with $\displaystyle Q < \frac{1}{2}$ are overdamped and will not ring at all.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Operational Amplifiers %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Operational Amplifiers}
+\section{Intro}
+\emph{Operational Amplifiers}, or \emph{op amps}, are an amplifier abstraction; that is, we can use it without knowing about its insides.
+
+The schematic symbol looks like this:\\
+
+\begin{circuitikz} 
+\draw	(0,0) node[op amp] (opamp) {}
+		(opamp.+) node[left] {$v_+$}
+		(opamp.-) node[left] {$v_-$}
+		(opamp.out) node[right] {$v_o$}
+		(opamp.down) node[ground] {}
+		(opamp.up) ++ (0,.5) node[above] {$12$ V};
+\draw (0,0.5) to (0,1);
+\end{circuitikz}
+
+Above is a \emph{single-supply} op amp, that can output voltages between 0 and 12 volts, with respect to ground. \emph{Dual-supply} op amps are also common; in that case, you'd replace the ground above with -12 volts, and have the ground (which is then not directly connected to the op amp) where the two rails ``meet'', i.e. output range is from 12 volts above ground all the way down to 12 volts below ground.\\
+That way, the op amp can output negative voltages (again with respect to the circuit ground), which is often required when dealing with signals such as audio, which are ground referenced and symmetric around the 0 volt axis.\\
+
+The ideal op amp has infinite input impedance, and zero output impedance. Thus, no current flows into the input terminals; all current from the output terminal comes from the power terminals.
+
+In many cases, we don't really care about showing the supply connection explicitly, and instead use the following symbol:\\
+
+\begin{circuitikz}
+\draw	(0,0) node[op amp] (opamp) {}
+		(opamp.+) node[left] {$v_+$}
+		(opamp.-) node[left] {$v_-$}
+		(opamp.out) node[right] {$v_o$};
+\end{circuitikz}
+
+This document will use the latter symbol from now on.\\
+
+Op amps use a \emph{differential} input. That is to say, neither of the two input connections is necessarily ground, and the amplifier amplifies the \emph{difference} between the two input ports. That is, ideally,
+
+\[ v_o = A (v_+ - v_-) \]
+where $A$ is the amplifier's voltage gain. In the ideal op amp model, $A \to \infty$. In real op amps, A is often on the order of 100,000 or more. Needless to say, most of the time, we don't want to amplify a signal that much - even a input voltage difference as tiny as $12 \mu$V would be enough to drive the output to the maximum 12 V ($12 \mu V \cdot 10^6 = 12 V$) for an amplifier with $A = 10^6$, which most certainly exist on the market.\\
+
+So, to summarize what we've seen so far:
+\begin{enumerate}
+\item The op amp is a \emph{differential} amplifier ...
+\item ... that outputs a ground-referenced voltage.
+\item Its gain is extremely high (ideally infinite), often on the order of $10000$ to a million, or even higher. If we want less gain, we'll have to take care of that outside the abstract ``amplifier box'' that is the op amp.
+\item Op amps can be powered by a single supply (a positive voltage and ground) or a dual supply (a positive and a negative voltage, with ground being in between the two). There are op amps made specifically for either of these two, though many works in either configuration.
+\end{enumerate}
+
+To analyze circuits with ideal op amps, we model them as a VCVS, that is, a voltage-controlled voltage source. Again, no current flows into the input terminals, so we model them as open circuits.\\
+
+\begin{circuitikz}[scale=1.2]
+\draw (1,2.5) node{\hspace{-20px} $v_{+}$} to [short, i={$i_{+} \approx 0$}] (3,2.5);
+\draw (1,1.5) node{\hspace{-20px} $v_{-}$} to [short, i={$i_{-} \approx 0$}] (3,1.5);
+\draw (4,0) to node [ground] {} (4, 1) to [cV] (4,3);
+\draw (4,3) to [short, -o] (6,3);
+\draw (6,1.5) [short, o-] {} to (6,1.25) node [ground] {};
+\draw (5.75,2.75) to [open, v^=$v_o$] (5.75,1.75);
+\end{circuitikz}
+
+Since real-life op amps are powered by a power supply (rather than being ideal sources themselves), they can never output a voltage that is higher than that of the power supply. Thus, when the difference between the inputs is greater than $\displaystyle \frac{\text{Power supply voltage}}{\text{Gain}}$, the op amp \emph{saturates}, and the output stays close to the power supply rail.\\
+Here's a plot of an op amp's transfer function, with a gain of $10^6$:
+
+\begin{comment}
+%%% Mathematica source code
+
+% Emulate saturation
+f[x_] = If[-12*10^-6 <= x <= 12*10^-6, x * 10^6, Sign[x] * 12]
+
+Plot[f[x], {x, -18 * 10^-6, 18 * 10^-6}, PlotRange -> Full,
+ Ticks -> {
+   {
+    {-12*10^-6, "-12\[Mu]V"}, {-6*10^-6, "-6\[Mu]V"}, {6*10^-6 , 
+     "6\[Mu]V"}, {12*10^-6, "12\[Mu]V"}
+    }, 
+   {
+    {-12, "-12V"}, {-6, "-6V"}, {6, "6V"}, {12, "12V"}
+    }
+   }, GridLines -> {
+   {12 * 10^-6, -12 * 10^-6}, None
+   },
+ GridLinesStyle -> Dotted,
+ AxesLabel -> {"\!\(\*SubscriptBox[\(v\), \(i\)]\)", 
+   "\!\(\*SubscriptBox[\(v\), \(o\)]\)"}]
+%%% End mathematiac source code
+\end{comment}
+
+\includegraphics[scale=1.5]{Graphics/opamp_transfer_function}
+
+Note the extreme difference in scale between the axes: the $v_i$ axis is in microvolts, while the $v_o$ axis is in volts. The op amp behaves linearly as long as the gain multiplied by the input voltage difference is less than the power supply voltage (we call this the \emph{active region}, or sometimes the linear region), but \emph{saturates} whenever the voltage difference is greater.\\
+
+Most op amps can't bring the output very close to either power supply rail; an op amp powered by a $\pm12$ V supply can usually swing between roughly -11 and +11 volts, or thereabouts. Therefore, an op amp will generally saturate before hittils the power supply voltage. Op amps which can output very close (usually within a few millivolts) of the power rails are called \emph{rail-to-rail output} op amps. There are also \emph{rail-to-rail input} and \emph{rail-to-rail input/output} (RRIO) op amps.
+
+\section{Noninverting amplifier}
+Let's use an op amp to build a noninverting amplifier, one of the simpler (and perhaps more common) uses of an op amp. This configuration uses a resistive divider between the output and the $v_-$ terminal to limit the gain to more usable values. This also has the huge advantage of making the op amp very stable, as opposed to its ``raw'' form, where the gain $A$ can vary extremely much for pretty much no discernable reason.\\
+It looks something like this:\\
+
+\begin{circuitikz}
+\draw (0,3) node[op amp, yscale=-1] (opamp) {} (0, 0);
+
+% Node voltage labels. Ugly hack!
+\draw (opamp.+) to [open] (-1.3, 3.25) node {$v_+$};
+\draw (opamp.-) to [open] (-1.3, 2.7) node {$v_-$};
+
+% v_- label at the divider
+\draw (2,1) to [open] (2.5,1) node {$v_-$};
+
+% Voltage source, output label, v_- to divider
+\draw (opamp.+) to (-3, 3.5) to [sV=$v_I$] (-3, -1) node [ground] {};
+\draw (opamp.out) to [short, -o] (3.5, 3) node {\quad\quad $v_o$};
+\draw (opamp.-) to (-1.6, 2.5) to (-1.6, 1) to (2, 1);
+
+\draw (2, 3) to [R=$R_1$, *-*] (2, 1)
+			  to [R=$R_2$, *-]  (2, -1);
+\draw (2, -1) node [ground] {} to (2, -1);
+\end{circuitikz}\ \\
+
+As always, $v_o$ is ground-referenced, though that will not be shown explicitly here or in future circuit diagrams.\\
+Let's analyze this circuit. First, we know that the op amp input/output relation is, always,
+
+\[ v_o = A(v_+ - v_-) \]
+
+Let's find the values of $v_+$ and $v_-$ for this circuit.\\
+$v_+$ is simply our input voltage $v_I$.\\
+$v_-$ is given by a simple voltage divider between $v_o$ and ground, so
+
+\[ v_- = v_o \cdot \frac{R_2}{R_1 + R_2} \]
+
+(Remember that $v_-$ is an open circuit; the input impedance is infinite, and the connection there doesn't affect the voltage divider ratio.)\\
+
+Let's substitute these values back into the first equation, and get:
+
+\[ v_o = A(v_I - v_o \cdot \frac{R_2}{R_1 + R_2}) \]
+\[ v_o = Av_I - A v_o \cdot \frac{R_2}{R_1 + R_2} \]
+
+We have $v_o$ terms on both sides; let's collect all $v_o$ terms on the left-hand side:
+
+\[ v_o + A v_o \cdot \frac{R_2}{R_1 + R_2} = A v_I  \]
+\[ v_o(1 + A \cdot \frac{R_2}{R_1 + R_2}) = A v_I \]
+
+Now we can simply divide both sides by the expression multiplying $v_o$ and we're pretty much done:
+
+\[ v_o = \frac{A v_I}{1 + A \cdot \frac{R_2}{R_1 + R_2}} \]
+
+Note that if $\displaystyle A \cdot \frac{R_2}{R_1 + R_2} \gg 1$, we can ignore the $1$ term without losing any noteworthy amount of precision. For example, if $A = 10^6$, $R_1 = 3000$ and $R_2 = 1000$, which gives a gain of 3.999984, the value we get using the approximation (ignoring the $1$) is exactly $4$. Such tiny errors don't really matter to us, so we can say that
+
+\[ v_o \approx \frac{A v_I}{A \cdot \frac{R_2}{R_1 + R_2}} \]
+
+Note that we can now cancel out the $A$ terms!
+
+\[ v_o \approx \frac{v_I}{\frac{R_2}{R_1 + R_2}} = v_I \cdot \frac{R_1 + R_2}{R_2} \]
+
+Therefore, this configuration gives a voltage gain of almost exactly $\displaystyle \frac{R_1 + R_2}{R_2} = 1 + \frac{R_1}{R_2}$, as long as we make sure that $\displaystyle A \cdot \frac{R_2}{R_1 + R_2} \gg 1$ is true, by making sure we never make $R_1$ much, much bigger than $R_2$. However, even when $R_1$ is \emph{1000 times} greater than $R_2$, the approximation works out quite well: for $A = 10^6$, $R_1 = 10^6$ $\Omega$ and $R_2 = 1000$ $\Omega$ the error is about 0.1\%. Such a configuration would give a gain of roughly 1000.\\
+
+So, this circuit works! It gives as a gain we can set via simple resistor values, and thus the op amp gain $A$ is virtually irrelevant to this circuit, as long as it's very large.\\
+The question is, though, \emph{how} does it work? The answer is that the resistor divider connected to the inverting input creates a \emph{negative feedback} loop.
+
+\newpage
+
+\section{Negative feedback}
+Negative feedback is a quite simple concept. This explanation may be a bit confusing at first, but think it through carefully and you should get it - and when you do, you'll agree that it's simple! I'll copy the schematic from above for convenience:\\
+
+\begin{circuitikz}
+\draw (0,3) node[op amp, yscale=-1] (opamp) {} (0, 0);
+
+% Node voltage labels. Ugly hack!
+\draw (opamp.+) to [open] (-1.3, 3.25) node {$v_+$};
+\draw (opamp.-) to [open] (-1.3, 2.7) node {$v_-$};
+
+% v_- label at the divider
+\draw (2,1) to [open] (2.5,1) node {$v_-$};
+
+% Voltage source, output label, v_- to divider
+\draw (opamp.+) to (-3, 3.5) to [sV=$v_I$] (-3, -1) node [ground] {};
+\draw (opamp.out) to [short, -o] (3.5, 3) node {\quad\quad $v_o$};
+\draw (opamp.-) to (-1.6, 2.5) to (-1.6, 1) to (2, 1);
+
+\draw (2, 3) to [R=$R_1$, *-*] (2, 1)
+			  to [R=$R_2$, *-]  (2, -1);
+\draw (2, -1) node [ground] {} to (2, -1);
+\end{circuitikz}
+
+\ \\
+
+Let's think about how this circuit works. Say $v_I$ is a static value of 5 volts, and $R_1 = R_2$ (in which case their actual values won't matter). The node voltage $v_-$ will be exactly half of $v_o$. $v_o$, in turn, will be (according to the gain equation we found) $\displaystyle v_I \cdot \frac{R + R}{R} = 2\cdot v_I$.\\
+So, to begin with, we have
+
+\[ v_I = v_+ = 5 V \]
+\[ v_o = 2\cdot v_I = 10 V \]
+\[ v_- = \frac{v_o}{2} = 5 V \]
+
+... Well, $v_+ \neq v_-$, but they're very, very close to equal. If they were exactly equal, $v_o$ would be the gain times 0 ($A(v_+ - v_-) = 10^6(5 - 5) = 0$), which clearly isn't the case here. The difference depends on the op amp's gain $A$, but will be on the order of microvolts for a gain of $10^6$. For now, we'll consider them equal, to drive home the point of negative feedback. In reality, $v_o$ is just ever so slightly different than $2 \cdot v_I$.\\
+
+So, right now, $v_+ = v_- = 5 V$, and $v_o = 10 V$. Now, let's think about what would happen if, for whatever reason (op amp instability, external noise, etc.) the voltage at node $v_o$ suddenly increased to, say, 12 volts, without a change in the input.\\
+Clearly, the voltage $v_+$ would remain unchanged; it will always stay at 5 volts due to the voltage source being directly connected there.\\
+$v_-$, on the other hand, is half of $v_o$, and so that node would become $6$ volts.\\
+So now, after this output voltage bump, we have $v_+ = 5$, $v_- = 6$ and $v_o = 12$. What happens then?\\
+
+Well, again, we have the op amp equation: $v_o = A(v_+ - v_-) = A(5 - 6) = -A$. In words, the op amp would try, as best it could, to drive the voltage $v_o$ down to $-10^6$ volts (using the gain $A=10^6$ we've been using so far). Needless to say it couldn't, due to the limited power supply, but it would try really hard to bring the voltage at the output node down.\\
+Let's say it managed to drive the output down to 8 volts in a short time period. At that point, $v_+ = 5V$, $\displaystyle v_- = \frac{8}{2} = 4V$, which means the op amp would try to drive the output \emph{up} really hard, since $v_+ > v_-$, and so on.\\
+In practice, the output wouldn't fluctuate this much; rather, the reaction would be fast enough that the change virtually doesn't happen in the first place. This \emph{can} certainly lead to unwanted oscillations, but that topic is a bit too advanced for this section and chapter.\\
+
+The important point here is that the negative feedback loop causes the op amp to do whatever it can on the output to keep the two inputs very close to each other. If the output rises too high, causing $v_-$ to increase above $v_+$, it tries to reduce the output voltage to compensate. If the output drops too low, causing $v_-$ to drop below $v_+$, it tries to increase the output voltage to compensate.\\
+This is a \emph{negative feedback loop}, a concept which can be applied to many situations, including many not in electronics.
+
+In negative feedback, a gap between the output and expected output will be used to \emph{reduce} this gap, and bring the output closer to the expected value. Therefore negative feedback helps the system become stable.\\
+
+Positive feedback is, as one might expect, the opposite. With positive feedback, a small gap between the expected and actual values will be used to create an even bigger gap, which in turn will increase the amount of feedback, and make the gap larger yet, etc. A common example is when a microphone picks up sound from a nearby speaker, causing the sound from the microphone to be sent to the speaker, which leads to more sound being picked up by the microphone, increasing the volume in a loop until only an extremely loud noise remains.
+
+\section{Virtual short/virtual ground}
+
+When we have an op amp with negative feedback (and \emph{only} when we have negative feedback!), the feedback causes $v_-$ to be almost equal to $v_+$. We can show this by rearranging the gain equation:
+
+\[ v_o = A(v_+ - v_-) \]
+\[ v_+ - v_- = \frac{v_o}{A} \]
+
+If we have a typical op amp with a very high gain, let's continue assuming $10^6$, this means that for $v_o$ in the typical range of $\pm 20V$ or less, the difference between $v_+$ and $v_-$ will never be larger than on the order of $\displaystyle \frac{20V}{10^6} = 20 \mu V$.\\
+Since a short circuit means a zero (or, with wires that have resistances, just a very small) voltage difference, this is referred to as a \emph{virtual short}, or (especially when $v_+$ is tied to ground) as a \emph{virtual ground}.
+
+This leads to us having three useful constraints when dealing with op amp circuits with negative feedback:
+
+\[ i_+ \approx 0 \]
+\[ i_- \approx 0 \]
+\[ v_+ \approx v_- \]
+
+When combined, these constraints give rise to a new, very easy method of analysis for these circuits, as we'll see in the following sections.
+
+\newpage
+
+\section{Op amps as buffers}
+
+Let's see what happens if we take the noninverting amplifier in the section above, and instead of coupling $v_o$ to $v_-$ through a voltage divider, we simply connect them with a wire.\\
+Since this connection provides negative feedback, we can analyze it extremely easily using the virtual short method outlined above.\\
+
+\begin{circuitikz}
+\draw (0,3) node[op amp, yscale=-1] (opamp) {} (0, 0);
+
+% Node voltage labels. Ugly hack!
+\draw (opamp.+) to [open] (-1.3, 3.25) node {$v_+$};
+\draw (opamp.-) to [open] (-1.3, 2.7) node {$v_-$};
+
+% v_- label at the divider
+\draw (2,1) to [open] (2.5,1) node {$v_-$};
+
+% Voltage source, output label, v_- to divider
+\draw (opamp.+) to (-3, 3.5) to [sV=$v_I$] (-3, -1) node [ground] {};
+\draw (opamp.out) to [short, -o] (3.5, 3) node {\quad\quad $v_o$};
+\draw (opamp.-) to (-1.6, 2.5) to (-1.6, 1) to (2, 1) to [short, -*] (2,3);
+
+\end{circuitikz}
+\ \\
+
+First, we note that $v_+ = v_I$. Via the virtual short, this means that $v_- \approx v_I$. Since $v_o = v_-$ via the wire they share, we draw the conclusion that $v_o \approx v_I$. Well, that was quick!\\
+
+This circuit is known as a buffer, or source follower. It presents a very large (ideally infinite) impedance towards the input $v_I$, so that only a very small current is drawn. However, the op amp's output can deliver an ideally infinite current (which is very far from true in practice, as signal op amps, as opposed to power op amps, are often limited to less than 50 or so milliamps).\\
+However, even if the op amp were to be limited to a 10 mA output current, the buffer could still be useful, as many voltage sources such as sensitive sensors may be unable to provide even 1 mA without negative effects. Thus, even a trivial task such as connecting the sensor to some reader, perhaps an ADC (analog-to-digital converter) in a microcontroller, may not work without buffering the voltage first.\\
+
+We can also build inverting buffers; see the next section.
+
+\newpage
+
+\section{Inverting amplifier}
+
+Another amplifier topology that uses negative feedback is the \emph{inverting} amplifier, which causes e.g. a 1 volt signal to become $-1 \cdot G$ at the output, where $G$ is the circuit's gain, set by $R_1$ and $R_2$.
+
+\begin{circuitikz}
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5) 
+		to [R=$R_2$, i>=$i$] (opamp.-)  (0,2.5);
+\draw (0,0.5) node [ground] {} to [V=$v_I$] (0,2.5);
+		
+\draw (3.8,0.5) node [ground] {} to (opamp.+);
+
+\draw (opamp.-) to [open] (3.35, 3.5) node {$v_-$};
+
+\draw (3.8,3.5) to 
+		[R=$R_1$, v=$v_{R1}$, i>=$i$] (6.2,3.5)  (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+\end{circuitikz}
+
+\ \\
+Since this circuit also uses negative feedback, we can use the virtual short method to analyze it quickly.\\
+First, we note that $v_+$ is tied to ground, i.e. 0 volts. Therefore, by the virtual short constraint, $v_-$ will be approximately 0 volts. Since by our definitions no current flows into the inverting input ($i_- = 0$), and we take $v_- = 0$, the current $i$ through $R_2$ must be simply $\displaystyle \frac{v_I - 0}{R_2}$. Since, again, no current flows into the inverting input, the same current $i$ must flow through $R_1$ as they are then in series.\\ Therefore, the voltage drop across $R_1$ is that current times the resistance, or
+
+\[ v_{R1} = \frac{v_I}{R_2} \cdot R_1 \] 
+
+The current flows left to right (because of $v_I$ being the driver towards the inverting input at 0 volts), which means the \emph{positive} side of the drop is to the left of $R_1$ (see the above circuit). Therefore, the node $v_o$ is equal to the voltage at $v_-$ minus that resistor drop:
+
+\[ v_o = 0 - \frac{v_I}{R_2} \cdot R_1 = -v_I \cdot \frac{R_1}{R_2} \]
+
+That concludes our analysis! The circuit is indeed inverting, and the (negative) gain is simply $\displaystyle \frac{R_1}{R_2}$.
+
+For the record, the full expression that governs the behavior of this circuit, without the simplifications, is
+
+\[ v_o = -\frac{A v_I R_1}{R_1 + R_2 + A R_2} \]
+
+... from an analysis that was performed, but was not outlined in these notes.\\
+As $A \to \infty$, the $R_1 + R_2$ term in the denominator becomes irrelevant, and expression reduces down to one where we can cancel out the As:
+
+\[ v_o \approx -\frac{\cancel{A} v_I R_1}{\cancel{A} R_2} = -v_I \cdot \frac{R_1}{R_2} \]
+
+\ \\
+Note that if $R_1 = R_2$, this circuit simply inverts the input, and is therefore an \emph{inverting buffer}, or \emph{unity gain inverting amplifier}, which can certainly be useful.\\
+
+The input impedance of this circuit, that is, $\displaystyle \frac{v_I}{i_I}$, where $i_I$ is the current flowing from the input voltage source, is
+
+\[ R_i = \frac{R_1}{A + 1} + R_2 \]
+
+Thus, as $A \to \infty$ (or just becomes ``very large''), the first term is generally irrelevant, and we can say that $R_i \approx R_2$.
+
+\newpage
+
+\section{Op amp subtractor}
+Let's analyze this circuit:
+
+\begin{circuitikz}
+% Op amp
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5) 
+		to [R, l=$R_1$, i>=$i$] (opamp.-)  (0,2.5);
+% v2 and ground
+\draw (0,0.5) node [ground] {} to [V=$v_2$] (0,2.5);
+
+% v- label		
+\draw (opamp.-) to [open] (3.35, 3.5) node {$v_-$};
+
+% Bottom R2 and ground
+\draw (3.8,-1.5) node [ground] {} to [R=$R_2$] (3.8,1); 
+\draw (3.8, 1) to (opamp.+);
+
+% Bottom R1 and v1
+\draw (1.5,1.5) [R=$R_1$, -*] to (opamp.+);
+\draw (1.5,-1.5) node [ground] {} to [V=$v_1$] (1.5,1) -- (1.5,1.5);
+
+% Upper R2 and connection to output
+\draw (3.8,3.5) to 
+		[R, l=$R_2$, v=$v_{R2}$, i>=$i$] (6.2,3.5)  (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+\end{circuitikz}
+
+\ \\
+As with the rest of the op amp circuits we've analyzed, this one uses negative feedback (see $R_2$), so we will again use the virtual short method to analyze it. However, this analysis is slightly more complex than the previous ones, due to more algebra at the end.\\
+Anyway, let's get started.\\
+
+Since the noninverting ($+$) input doesn't draw any current, the voltage at $v_+$ is given by the voltage divider formed by the $v_1$ - $R_1$ - $R_2$ series circuit:
+
+\[ v_+ = v_1 \cdot \frac{R_2}{R_1 + R_2} \]
+
+By the virtual short method, $v_- = v_+$:
+
+\[ v_- = v_+ \]
+
+Therefore, since we know $v_-$ and $v_2$, we can calculate the current through $R_1$, which we'll simply call $i$:
+
+\[ i = \frac{v_2 - v_-}{R_1} \]
+
+Note that, since the inverting ($-$) input draws no current, all of this current must flow through $R_2$ as well (see the circuit diagram). Therefore, the we can easily calculate the voltage drop across $R_2$ as current times resistance, or
+
+\[ v_{R2} = \frac{v_2 - v_-}{R_1} \cdot R_2 \] 
+
+By know, we know $v_-$, and we know the voltage drop across $R_2$. Since that voltage drop is positive ``towards the left'', $v_o$ will be $v_-$ \emph{minus} the drop across $R_2$:
+
+\[ v_o = v_- - v_{R2} \]
+\[ v_o = v_- - \frac{v_2 - v_-}{R_1} \cdot R_2 \]
+
+Let's gather the $v_-$ terms together:
+
+\[ v_o = v_-(1 + \frac{R_2}{R_1}) - \frac{v_2}{R_1} \cdot R_2 \]
+\[ v_o = v_-(1 + \frac{R_2}{R_1}) - v_2 \cdot \frac{R_2}{R_1} \]
+
+Let's substitute in $v_-$; remember, it's equal to the expression we have for $v_+$:
+
+\[ v_o = (v_1 \cdot \frac{R_2}{R_1 + R_2}) (1 + \frac{R_2}{R_1}) - v_2 \cdot \frac{R_2}{R_1} \]
+
+What a mess. Let's rewrite $\displaystyle 1 + \frac{R_2}{R_1}$:
+
+\[ v_o = (v_1 \cdot \frac{R_2}{R_1 + R_2}) (\frac{R_1 + R_2}{R_1}) - v_2 \cdot \frac{R_2}{R_1} \]
+
+Aha! Now we can cancel out those $R_1 + R_2$ terms:
+
+\[ v_o = v_1 \cdot \frac{R_2}{R_1} - v_2 \cdot \frac{R_2}{R_1} \]
+
+\[ v_o = \frac{R_2}{R_1} \left(v_1 - v_2 \right) \]
+
+As promised in the section title, this is an op amp \emph{subtractor} circuit. It calculates $v_1 - v_2$, scaled by the ratio of $R_2$ to $R_1$.
+
+\section{Summing amplifier}
+Since the previous section covered an op amp subtractor, let's cover an adder, usually called a \emph{summing amplifier}:\\
+
+\begin{circuitikz}
+% Op amp
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5);
+
+% RF and connection to output
+\draw (3.8,3.5) to 
+		[R=$R_F$] (6.2,3.5) (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+% RS and grounding, v- label
+\draw (1.5,2.5) [R=$R_S$] to (opamp.-);
+\draw (1.5,2.25) node [ground] {} to (1.5,2.5);
+\draw (opamp.-) to [open] (3.35, 3.5) node {$v_-$};
+
+% The long wire to the + input
+\draw (0.5, 1.5) [short, *-] to (opamp.+);
+
+% v2 and RI
+\draw (0.5, 1.5) to [R=$R_I$] (-1.5, 1.5);
+\draw (-1.5, 0) node [ground] {} to [V=$v_2$] (-1.5, 1) -- (-1.5, 1.5);
+
+% v1 and RI
+\draw (0.5, 1.5) to (0.5, 2.75) to [R=$R_I$] (-1.5, 2.75) -- (-3, 2.75);
+\draw (-3, 0) node [ground] {} to [V=$v_1$]  (-3, 1) -- (-3, 2.75);
+
+\end{circuitikz}
+
+\ \\
+Yet again, this circuit uses negative feedback, so we can use the virtual short method.\\
+First, we can figure out $v_+$. Since no current passes through the noninverting ($+$) input, we can find $v_+$ by analysing the $v_1$ - $R_I$ - $R_I$ - $v_2$ subcircuit.\\
+Since it's linear, we can use superposition, and figure out the voltage due to $v_1$ acting alone ($v_{+1}$) and $v_2$ acting alone ($v_{+2}$). To use superposition, we ``set one source to zero'' at a time, which for voltage sources means shorting it out. For $v_1$:
+
+\[ v_{+1} = v_1 \cdot \frac{R_I}{R_I + R_I} = \frac{v_1}{2} \]
+(since the resistors have the same value.)\\
+
+Similarly, for $v_2$:
+
+\[ v_{+2} = v_2 \cdot \frac{R_I}{R_I + R_I} = \frac{v_2}{2} \]
+
+So, the sum of the responses will be $v_+$:
+
+\[ v_+ = \frac{v_1 + v_2}{2} \]
+
+By the way, note that if the resistors had unequal values, the above would change. Not only would they not be divided by exactly two, but we would get a \emph{weighted average}, since the top resistor in this schematic is in the numerator for the $v_2$ divider, while the bottom resistor is in the numerator for $v_1$.\\
+If we relabel the top resistor $R_1$ and the bottom resistor $R_2$, and set $R_1 = 1000$, $R_2 = 3000$:
+
+\[ v_+ = v_1 \cdot \frac{R_2}{R_1 + R_2} + v_2 \cdot \frac{R_1}{R_1 + R_2} = \frac{3 v_1}{4} + \frac{v_2}{4} \]
+
+\ \\
+After that aside, let's get back on track. We found $v_+$, and via the virtual short method, $v_- = v_+$.\\
+
+There are several ways to find $v_o$ from here, but the node method gives a solution with only minor algebra. We set up a node equation for $v_-$:
+
+\[ \frac{v_-}{R_S} + \frac{v_- - v_o}{R_F} = 0 \]
+
+Move $v_o$ to the right-hand side and multiply both sides by $R_F$:
+
+\[ \frac{R_F v_-}{R_S} + v_- = v_o \]
+
+Switch the sides for clarity and factor out $v_-$:
+
+\[ v_o = \frac{R_F v_-}{R_S} + v_- \]
+\[ v_o = v_-(\frac{R_F}{R_S} + 1) \]
+
+And, finally, get the actual value of $v_-$ in there:
+
+\[ v_o = \frac{v_1 + v_2}{2} (\frac{R_F}{R_S} + 1) \]
+
+We're done! We can also easily see that if we set $R_F = R_S$, the output is simply $v_o = v_1 + v_2$.
+
+%\newpage
+
+\section{Op amp integrator}
+Due to some magic of capacitors, we can use op amps to create circuits that integrate and differentiate signals (with respect to time). Here's an integrator circuit:
+
+\begin{circuitikz}
+% Op amp
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5);
+
+% Feedback/integrator cap, connection to output
+\draw (3.8,3.5) to 
+		[C=$C$, v=$v_C$, i>=$i$] (6.2,3.5) (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+% Grounded noninverting input
+\draw (3.8, 1) node [ground] {} to (opamp.+);
+
+% Voltage source, resistor
+\draw (1, 1) node [ground] {} to [V=$v_I$] (1,2.5);
+\draw (1,2.5) to [R=$R$, i>=$i$] (opamp.-);
+
+\end{circuitikz}
+
+\ \\
+How does this circuit work? Well, remember the formula for the voltage over a capacitor:
+
+\[ v_C = \frac{1}{C} \int_{-\infty}^{t} i(t) dt \]
+
+$v_+$ is grounded, and thus at 0 volts. $v_-$ is, via the virtual short technique, also 0 volts. Therefore, the current through $R$ is simply $\displaystyle \frac{v_I}{R}$.\\
+That same current must go through the capacitor, since there's no other way (the noninverting input has an infinite impedance), so the capacitor voltage drop is
+
+\[ v_C = \frac{1}{C} \int_{-\infty}^{t} \frac{v_I}{R} dt = \frac{1}{RC} \int_{-\infty}^{t} v_I dt \]
+
+As with the previous op amp circuits where the noninverting input is grounded, we can find $v_o$ as
+
+\[ v_o = v_- - v_C = 0 - \frac{1}{RC} \int_{-\infty}^{t} v_I dt \]
+
+\[ v_o = -\frac{1}{RC} \int_{-\infty}^{t} v_I dt \]
+
+Thus this is an inverting integrator. If needed, we could feed the output into an inverting buffer (aka inverting unity-gain amplifier) to get it positive.\\
+
+If we do a more complete analysis, we get the differential equation
+\[ RC(1 + A) \frac{dv_-}{dt} + v_- = v_I \]
+indicating that the time constant for this circuit is multiplied by the op amp gain $A$. Therefore, the equation that describes $v_o$ for a step input is of the same form as we've seen in regular series RC circuits:
+\large
+\[ v_o = -AV(1 - e^{-\frac{t}{(1 + A)RC}}) \]
+\normalsize
+... where V is the voltage of the step input.\\
+Thus, for short time scales (short compared to $(1 + A)RC$), this circuit is a very good approximation of an ideal integrator.
+
+\section{Op amp differentiator}
+
+\begin{circuitikz}
+% Op amp
+\draw	(5,2) node[op amp] (opamp) {}  (0,2.5);
+
+% Feedback resistor, connection to output
+\draw (3.8,3.5) to 
+		[R=$R$, v=$v_R$, i>=$i$] (6.2,3.5) (3.8,3.5) to 
+		[short, -*] (opamp.-)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+% Grounded noninverting input
+\draw (3.8, 1) node [ground] {} to (opamp.+);
+
+% Voltage source, capacitor
+\draw (1, 1) node [ground] {} to [V=$v_I$] (1,2.5);
+\draw (1,2.5) to [C=$C$, i>=$i$] (opamp.-);
+
+\end{circuitikz}
+
+\ \\
+This circuit is identical to the integrator except for \emph{one} change: the capacitor and resistor places have been swapped. So, how does this work, then?\\
+
+$v_+$ is grounded, and so via the virtual short method, $v_-$ must also be 0 volts. Therefore, the voltage drop across the capacitor equals $v_I$. The current through the capacitor is given by
+
+\[ i = C \frac{dv_I}{dt} \]
+
+That same current $i$ is then forced through the resistor $R$, which causes a voltage drop of $R \cdot i$ across the resistor:
+
+\[ v_R = RC \frac{dv_I}{dt} \]
+
+And, as with several of the previous circuits, $v_o$ equals $v_-$ minus the drop across the resistor:
+
+\[ v_o = v_- - v_R = 0 - RC \frac{dv_I}{dt} \]
+\[ v_o = - RC \frac{dv_I}{dt} \]
+
+So, as with the previous circuit, this one also inverts. And, again, we could pass it through an inverting buffer op amp to get rid of the inversion.
+
+\section{Buffered filters}
+Consider a basic passive RC filter:\\
+
+\begin{circuitikz}
+
+\draw (3, 0) [R=$R$] to (5, 0) to [C=$C$] (5,-2);
+\draw (2,-2) -- (7,-2); % bottom rail
+\draw (2,0) to (3,0); % top left to R
+\draw (5, 0) to (7,0); % top right, from R
+
+% Voltage labels
+\draw (2,0) to [open, v=$V_i$, o-o] (2, -2);
+\draw (7,0) to [open, v=$V_o$, o-o] (7, -2);
+
+% Filter box
+\draw [dashed] (3,0.8) -- (6, 0.8) -- (6, -2.5) -- (3, -2.5) -- (3, 0.8);
+
+\end{circuitikz}
+
+\ \\
+The dashed lines represent the filter components (the reason for them will be clear soon).\\
+We've analyzed this circuit in a previous chapter. However, let's look at how a more complete circuit might look, when we attach a Thevenin equivalent source and a resistive load (perhaps a speaker):\\
+
+\begin{circuitikz}
+
+\draw (3, 0) [R=$R$] to (5, 0) to [C=$C$] (5,-2);
+\draw (0.5,-2) -- (7.5,-2); % bottom rail
+%\draw (2,0) to (2.75,0); % top left to R
+\draw (0.5, 0) to (0.75, 0); % source to RTH
+\draw (2.75, 0) to (3, 0); % RTH to R
+\draw (5, 0) to (7.5,0); % top right, from R
+
+% Voltage labels
+%\draw (2,0) to [open, v=$V_i$, o-o] (2, -2);
+%\draw (7,0) to [open, v=$V_o$, o-o] (7, -2);
+
+% Filter box
+\draw [dashed] (3,0.8) -- (6, 0.8) -- (6, -2.5) -- (3, -2.5) -- (3, 0.8);
+
+% Source resistance
+\draw (0.75, 0) to [R=$R_{TH}$] (2.75,0);
+% Source
+\draw (0.5, -2) node [ground] {} to [V=$V_{TH}$] (0.5, 0);
+
+% Load
+\draw (7.5, 0) to [R=$R_L$, v=$V_o$] (7.5, -2);
+
+\end{circuitikz}
+
+\ \\
+If we analyze this circuit, we'll soon find that the transfer function is not at all the one we would expect from just $R$ and $C$. Rather, the transfer function would be
+
+\[ H(s) = \frac{\frac{1}{sC} || R_L}{(\frac{1}{sC} || R_L) + R_{TH} + R} \]
+
+Instead of what we actually wanted:
+
+\[ H(s) = \frac{\frac{1}{sC}}{\frac{1}{sC} + R} \]
+
+What can we do about this? Well, one solution - that works just fine, but is rather wasteful - is to buffer both the input and output of the filter:\\
+
+\begin{circuitikz}
+
+\draw (5.5, -0.5) [R=$R$] to (7.5, -0.5) to [C=$C$, *-] (7.5,-2.5); % Actual RC part
+\draw (7.5, -2.5) node [ground] {}; % Cap to ground
+\draw (5.5, -0.5) to (4.95, -0.5); % Connect R to first opamp
+\draw (3.75, -0.5) node[op amp, yscale=-1] (opamp) {};
+
+% Second buffer stage
+\draw (10, -0.5) node[op amp, yscale=-1] (opamp2) {};
+\draw (opamp2.+) to (7.5, 0) -- (7.5, -0.5); % Connect + to R/C junction
+\draw (opamp2.-) to (8.75, -1) -- (8.75, -2.25) -- (11.2, -2.25) to [short, -*] (opamp2.out);
+
+% Output buffer to load
+\draw (opamp2.out) -- (13, -0.5);
+\draw (13, -0.5) to [R=$R_L$] (13, -2.5);
+\draw (13, -2.5) node [ground] {};
+
+% Feedback path
+\draw (opamp.-) -- (2.5, -1) -- (2.5, -2.25) -- (4.95, -2.25) to [short, -*] (opamp.out);
+
+\draw (0.5, 0) to (0.75, 0); % source to RTH
+
+% Filter box
+\draw [dashed] (2.35,0.8) -- (11.5, 0.8) -- (11.5, -3.5) -- (2.35, -3.5) -- (2.35, 0.8);
+
+% Source resistance
+\draw (0.75, 0) to [R=$R_{TH}$] (2.6,-0.01);
+% Source
+\draw (0.5, -2) node [ground] {} to [V=$V_{TH}$] (0.5, 0);
+
+\end{circuitikz}
+
+\ \\
+That's a fair bit of extra complexity! However, the input op amp will make sure that virtually 0 current is drawn from the source, and decouple the input from the filter.\\
+Likewise, the output op amp will make sure virtually no current is drawn from the RC network, so that the load resistance doesn't affect the transfer function.\\
+Assuming ideal op amps, this filter should behave as a passive filter does when there is no load (infinite load resistance) and 0 source resistance. This filter also has (with ideal op amps) infinite input impedance and 0 output impedance!
 
 %%%%%%%%%%%%%%%%%%%%%
 %%% Miscellaneous %%%
