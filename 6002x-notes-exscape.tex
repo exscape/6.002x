@@ -169,6 +169,21 @@ The energy stored in an inductor is:
 
 \[ E = \frac{1}{2} L i^2 \]
 
+\section{First order circuits}
+
+General equation for an increasing/decaying exponential in a RC/RL circuit:
+
+\[ v = V_S + (V_0 - V_S) e^{-t/RC} \]
+where v = the voltage across the capacitor or inductor.\\
+
+ZIR / Zero Input Response, same as above with $V_S = 0$:
+
+\[ V_0 e^{-t/RC} \]
+
+ZSR / Zero State Response, same as above with $V_0 = 0$:
+
+\[ V_S(1 - e^{-t/RC}) \]
+
 \newpage
 
 \section{Second order circuits, impedance, filters}
@@ -1532,7 +1547,7 @@ Plot[f[x], {x, -18 * 10^-6, 18 * 10^-6}, PlotRange -> Full,
 
 Note the extreme difference in scale between the axes: the $v_i$ axis is in microvolts, while the $v_o$ axis is in volts. The op amp behaves linearly as long as the gain multiplied by the input voltage difference is less than the power supply voltage (we call this the \emph{active region}, or sometimes the linear region), but \emph{saturates} whenever the voltage difference is greater.\\
 
-Most op amps can't bring the output very close to either power supply rail; an op amp powered by a $\pm12$ V supply can usually swing between roughly -11 and +11 volts, or thereabouts. Therefore, an op amp will generally saturate before hittils the power supply voltage. Op amps which can output very close (usually within a few millivolts) of the power rails are called \emph{rail-to-rail output} op amps. There are also \emph{rail-to-rail input} and \emph{rail-to-rail input/output} (RRIO) op amps.
+Most op amps can't bring the output very close to either power supply rail; an op amp powered by a $\pm12$ V supply can usually swing between roughly -11 and +11 volts, or thereabouts. Therefore, an op amp will generally saturate before it the power supply voltage. Op amps which can output very close (usually within a few millivolts) of the power rails are called \emph{rail-to-rail output} op amps. There are also \emph{rail-to-rail input} and \emph{rail-to-rail input/output} (RRIO) op amps.
 
 \section{Noninverting amplifier}
 Let's use an op amp to build a noninverting amplifier, one of the simpler (and perhaps more common) uses of an op amp. This configuration uses a resistive divider between the output and the $v_-$ terminal to limit the gain to more usable values. This also has the huge advantage of making the op amp very stable, as opposed to its ``raw'' form, where the gain $A$ can vary extremely much for pretty much no discernable reason.\\
@@ -2287,6 +2302,34 @@ If we substitute $s = j\omega$ and divide by $V_i$, we get the circuit's transfe
 \large
 \[ H(j\omega) = - \frac{j \omega C_1 R_2}{-\omega^2 + \frac{j\omega(C_1 + C_2)}{C_1 C_2 R_2} + \frac{1}{C_1 C_2 R_1 R_2}} \]
 \normalsize
+
+\section{Positive feedback}
+Positive feedback was briefly touched upon in the section on \emph{negative} feedback, but deserves more study. Let's see what happens if we make a connection similar to the inverting amplifier, but connect the feedback and input to the \emph{positive} terminal, and ground the \emph{negative} terminal.\\
+
+\begin{circuitikz}
+\draw	(5,2) node[op amp, yscale=-1] (opamp) {}  (0,2.5) 
+		to [R=$R_2$, i>=$i$] (opamp.+)  (0,2.5);
+\draw (0,0.5) node [ground] {} to [V=$v_I$] (0,2.5);
+		
+\draw (3.8,0.5) node [ground] {} to (opamp.-);
+
+\draw (opamp.-) to [open] (3.35, 3.5) node {$v_+$};
+
+\draw (3.8,3.5) to 
+		[R=$R_1$, v=$v_{R1}$, i>=$i$] (6.2,3.5)  (3.8,3.5) to 
+		[short, -*] (opamp.+)  (6.2,3.5) to 
+		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+\end{circuitikz}
+\ \\
+
+Let's analyze this circuit intuitively first. Note that we're feeding a portion of the output back to the \emph{positive} terminal of the op amp, which means we now have \emph{positive} feedback.\\
+Assume that the circuit is in equilibrium, to begin with. What would happen in this circuit if, for whatever reason (noise, external excitation, etc.) the output node $v_o$ would increase in voltage?\\
+Well, we have a voltage divider back to the positive terminal, so a portion of that voltage increase would appear at the positive terminal. Via the op amp equation $v_o = A(v_+ - v_-)$, the op amp would hugely amplify that voltage, and vastly increase the output. That, in turn, would make an even higher voltage appear at the + terminal, which would get amplified, etc. Very quickly, the op amp will spiral out of control, saturate and hit the positive supply rail.\\
+
+Let's then think about what would happen if we start out at $v_+ = v_- = v_o = 0$ volts. Say $v_o$ drops down to $-1$ volt. A portion of that would be fed back to the positive input; for this example, let's say $R_1 = R_2$, so that exactly half gets fed back.\\
+$-0.5$ volts would appear at $v_+$, while $v_-$ would remain at 0 volts as always (it's grounded!). Via the good old op amp equation, we have $v_o = A(-0.5 - 0)$, so the op amp will try to force the output down as low as it can (as the value of A is very, very large, so $v_o$ will be much less than the supply voltage that might be on the order of $-12$ volts.).
 
 %%%%%%%%%%%%%%%%%%%%%
 %%% Miscellaneous %%%
