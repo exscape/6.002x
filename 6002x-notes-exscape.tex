@@ -267,7 +267,7 @@ One definition of atan2, if you are not using math software that has it, is:
 
 \[ \text{atan2}(b, a) = 2\arctan{(\frac{b}{\sqrt{a^2 + b^2} + a})} \]
 
-However, note that these notes use an atan2 function that is defined with the variables in the opposite order, i.e. atan2(a, b); specifically, Mathematica's ArcTan[a, b] function.
+However, do note that these notes use an atan2 function that is defined with the variables in the opposite order, i.e. atan2(a, b); specifically, Mathematica's ArcTan[a, b] function.
 
 
 \subsection{Impedances}
@@ -697,7 +697,7 @@ Thus, finally, the full equation that governs the capacitor voltage of the serie
 
 \[ v(t) = V_I - V_I e^{-\alpha t} \cos{\omega_d t} - \frac{V_I \alpha}{\omega_d} e^{-\alpha t} \sin{\omega_d t} \]
 
-Using the scaled sum of sines trig identity, we can turn this cosine minus sine business into a a single cosine, and end up with:
+Using the scaled sum of sines trig identity, we can turn this cosine minus sine business into a single cosine, and end up with:
 
 \[ v(t) = V_I - V_I \frac{\omega_0}{\omega_d} e^{-\alpha t} \cos{(\omega_d t - \arctan{(\frac{\alpha}{\omega_d})})} \]
 
@@ -1354,7 +1354,7 @@ This isn't really news, since we knew the values of $\alpha$ and $\omega_0$ for 
 We can use these values to find the part values we need. $\omega_0$ is the \emph{center frequency} of the filter, so if we calculate the center frequency we want and set that equal to $\omega_0$, that should be a start. After that, we can set $\Delta \omega$ equal to the bandwidth we wanted.\\
 Two equations, three unknowns, but to make our lives easier we can simply choose one value ourselves.\\
 
-Let's calculate the center frequency. This isn't quite as simple as taking the arithmetic mean $\displaystyle \frac{f_1 + f_2}{2}$, which would give us $\displaystyle \frac{1000 + 10000}{2} = 5500$ Hz. Instead, we need to take the \emph{geometric mean}, which is defined as $\sqrt[n]{a_1 \cdot a_2 \cdots a_{n-1} \cdot a_{n}}$ - that is, multiply the number together, and take the $n$th root of the product, where $n$ is the count of numbers. So, the center frequency we want is computed as
+Let's calculate the center frequency. This isn't quite as simple as taking the arithmetic mean $\displaystyle \frac{f_1 + f_2}{2}$, which would give us $\displaystyle \frac{1000 + 10000}{2} = 5500$ Hz. Instead, we need to take the \emph{geometric mean}, which is defined as $\sqrt[n]{a_1 \cdot a_2 \cdots a_{n-1} \cdot a_{n}}$ - that is, multiply the numbers together, and take the $n$th root of the product, where $n$ is the count of numbers. So, the center frequency we want is computed as:
 
 \[ \omega_1 = f_1 \cdot 2\pi = 1000 \cdot 2 \pi \]
 \[ \omega_2 = f_2 \cdot 2\pi = 10000 \cdot 2 \pi \]
@@ -1364,7 +1364,7 @@ Now that we have one of the two values we wanted, let's find the bandwidth we wa
 
 \[ \Delta \omega = \omega_2 - \omega_1 = 10000 \cdot 2\pi - 1000 \cdot 2\pi = 9000 \cdot 2\pi \]
 
-Now all that remains is to solve the system of equations we get for these two, setting our $\omega_0$ equal to the circuit equation, and doing the same for the bandwidth:
+Now all that remains is to solve the system of equations we get for these two, setting our desired $\omega_0$ equal to the circuit equation, and doing the same for the bandwidth:
 
 \[ \frac{1}{\sqrt{LC}} = 2000\pi \sqrt{10} \]
 \[ \frac{R}{L} = 9000 \cdot 2\pi \]
@@ -1411,8 +1411,8 @@ If we solve these simultaneous equations, the answers given are
 
 \end{comment}
 %%%%%%%%%%%%%%%%% This part has been rewritten %%%%%%%%%%%%%%%%%%%%%%%%
-
-So, for $R = 680 \Omega$, the values are roughly $L = 12.025$ mH and $C = 210.65$ nF.
+\ \\
+So, for $R = 680 \Omega$ (a chosen value, not a calculated one), the values are roughly $L = 12.025$ mH and $C = 210.65$ nF.
 
 Here are the Bode plots for the resulting filter:
 
@@ -2357,7 +2357,210 @@ Assume that the circuit is in equilibrium, to begin with. What would happen in t
 Well, we have a voltage divider back to the positive terminal, so a portion of that voltage increase would appear at the positive terminal. Via the op amp equation $v_o = A(v_+ - v_-)$, the op amp would hugely amplify that voltage, and vastly increase the output. That, in turn, would make an even higher voltage appear at the + terminal, which would get amplified, etc. Very quickly, the op amp will spiral out of control, saturate and hit the positive supply rail.\\
 
 Let's then think about what would happen if we start out at $v_+ = v_- = v_o = 0$ volts. Say $v_o$ drops down to $-1$ volt. A portion of that would be fed back to the positive input; for this example, let's say $R_1 = R_2$, so that exactly half gets fed back.\\
-$-0.5$ volts would appear at $v_+$, while $v_-$ would remain at 0 volts as always (it's grounded!). Via the good old op amp equation, we have $v_o = A(-0.5 - 0)$, so the op amp will try to force the output down as low as it can (as the value of A is very, very large, so $v_o$ will be much less than the supply voltage that might be on the order of $-12$ volts.).
+$-0.5$ volts would appear at $v_+$, while $v_-$ would remain at 0 volts as always (it's grounded!). Via the good old op amp equation, we have $v_o = A(-0.5 - 0)$, so the op amp will try to force the output down as low as it can (as the value of A is very, very large, the op amp wants $v_o$ to be much less than the supply voltage that might be on the order of $-12$ volts).\\
+
+\section{Op amp comparator}
+
+Let's try to build a circuit that exploits the positive feedback phenomenon, where the output voltage is virtually always either $+V_S$ or $-V_S$. We can use such a circuit as a comparator:\\
+
+\begin{circuitikz}
+\draw	(5,2) node[op amp, yscale=-1] (opamp) {}  (2,2.5) 
+		to [short] (opamp.+);
+\draw (2,0.5) node [ground] {} to [V=$v_I$] (2,2.5);
+		
+\draw (3.8,0.5) node [ground] {} to (opamp.-);
+
+%\draw (opamp.-) to [open] (3.35, 3.5) node {$v_+$};
+
+%\draw (3.8,3.5) to 
+%		[R=$R_1$, v=$v_{R1}$, i>=$i$] (6.2,3.5)  (3.8,3.5) to 
+%		[short, -*] (opamp.+)  (6.2,3.5) to 
+\draw		[short, -*] (opamp.out)  (opamp.out) to 
+		[short, -o] (7, 2) to (7,2) node {\quad\quad $v_o$};  
+
+\end{circuitikz}
+\ \\
+
+This circuit will have $v_o = V_S$ whenever $v_I$ is positive ($v_I > v_-$, and $v_-$ is grounded) and $v_o = -V_S$ when $v_I$ is negative ($v_I < v_-$), as long as $A v_+ > V_S$ or $A v_+ < -V_S$ is true, so that the op amp is saturated.\\
+Of course, the $v_-$ terminal doesn't have to be grounded - it could be set to some reference voltage that we want to compare to $v_+$, via a voltage divider, perhaps. It could even be a second signal.
+
+Here's the transfer function for a comparator, normalized so that $v_o$ ranges between 1 and -1:
+
+\begin{comment}
+Plot[{Sin[x], Sign[Sin[x]]} , {x, 0, 3 \[Pi]}, Filling -> {2 -> Axis}]
+\end{comment}
+
+\includegraphics[scale=1.5]{Graphics/comparator}
+
+(The filled areas are the output; the unconnected lines were hard to spot without the filling.)\\
+Looks great! However, what whould happen if there were noise on the input voltage? The distorted input could cross zero multiple times due to noise, so the output is not a clean square wave:
+
+\begin{comment}
+Plot[{Sin[x] + 1/4 Sin[25 x + \[Pi]/3], 
+  Sign[Sin[x] + 1/4 Sin[25 x + \[Pi]/3]]} , {x, 0, 3 \[Pi]}, 
+ Filling -> {2 -> Axis}]
+\end{comment}
+
+\includegraphics[scale=1.5]{Graphics/comparator_noise}
+
+Because the noise causes the input to cross zero multiple times extra per cycle, there are glitches in the square wave output. This example is obviously exaggerated, but we still want a better solution. If we could move the threshold from 0 to some positive/negative voltage pair, so that the noise doesn't cross those thresholds very easily, this could be avoided.\\
+Let's see (in the next section) what would happen to this transfer function if we add positive feedback.
+
+\newpage
+
+\section{Schmitt trigger}
+
+If we change the circuit slightly from the previous comparator to add positive feedback, and at the same time provide the input to the inverting input, we get this circuit:\\
+
+\begin{circuitikz}
+\draw (0,3) node[op amp] (opamp) {} (0, 0);
+
+% Node voltage labels. Ugly hack!
+\draw (opamp.-) to [open] (-1.3, 3.25) node {$v_-$};
+\draw (opamp.+) to [open] (-1.3, 2.7) node {$v_+$};
+
+% v_- label at the divider
+\draw (2,1) to [open] (2.5,1) node {\quad\quad $\displaystyle v_+ = \frac{v_o}{2}$};
+
+% Voltage source, output label, v_- to divider
+\draw (opamp.-) to (-3, 3.5) to [sV=$v_I$] (-3, -1) node [ground] {};
+\draw (opamp.out) to [short, -o] (3.5, 3) node {\quad\quad $v_o$};
+\draw (opamp.+) to (-1.6, 2.5) to (-1.6, 1) to (2, 1);
+
+\draw (2, 3) to [R=$R_1$, *-*] (2, 1)
+			  to [R=$R_2$, *-]  (2, -1);
+\draw (2, -1) node [ground] {} to (2, -1);
+\end{circuitikz}
+\ \\
+
+This circuit is a \emph{Schmitt trigger}; more specifically, an inverting Schmitt trigger. It has \emph{hysteresis} (it ``remembers'' the previous state of the circuit), and will solve the problem we had. How? Well let's analyze the circuit and find out!\\
+
+Let's do a manual ``simulation'' again, like we did with the previous comparator. Also, let's use some numerical values to make it a bit more intuitive. We'll use $R_1 = R_2$ (their values don't really matter, only the ratio) and $V_S$ = 15 V (and therefore $-V_S = -15$ V). Also, we'll start off our simulation with $v_I = 0$ V and $v_o = 15$ V, a state that we'll soon see is valid for the normal operation of this circuit.\\
+
+With the values we've chosen, $v_+$ will be half of $v_o$, so $v_+ = 7.5$ volts. The op amp equation always applies, so with $v_- = v_I = 0$ volts, the op amp will saturate the output, as $v_o = A(7.5 - v_I) = A(7.5 - 0)$ far exceeds $V_S = 15$ volts. Let's look at that equation a bit more carefully. As long as $A$ is very big (again, it's usually over $10^4$, and not rarely over $10^6$), $v_o$ will stick to $V_S$ as long as the input is less than 7.5 volts. For example, say the input increases all the way to 7.4 volts; via $v_o = A(7.5 - 7.4)$, the output will still be $v_o = 0.1 \cdot A$ which still far exceeds $V_S$.\\
+Interesting things happen when $v_- > v_+$, however. For example, when $v_I = v_- = 7.6$ volts, $v_+ - v_-$ becomes negative, and the op amp equation evaluates to a hugely negative number, and so the op amp will saturate at the \emph{negative} rail $-V_S$, since $v_o = A(7.5 - 7.6) = -0.1 \cdot A \ll -V_S$.\\
+
+Now that the input has gone above the old ``switching threshold'' of 7.5 volts, let's see what happens when we go back below again. Note that now that $v_o = -15$ volts, $v_+ = -7.5$ volts, thanks to the voltage divider at the output.
+
+We have $v_o = A(v_+ - v_-) = A(-7.5 - 7.6)$ at the moment, which evaluates to a very negative number, so the op amp should indeed be in negative saturation. What happens if we lower the input voltage to 7.4 volts, below the old switching threshold? It still evaluates to a negative number! Even if we go to $v_I = 0$, it will \emph{still} evaluate to $v_o = A(-7.5)$. In order to get the output to switch, we need to go all the way down to $v_I \approx -7.5$ volts (ever-so-slightly lower). Let's use $v_I = -7.6$ volts. Via the good old op amp equation, we have $v_o = A(-7.5 - (-7.6)) = A(0.1)$, which means the output will now switch to positive saturation again, and $v_+$ will therefore become $+7.5$ volts.\\
+
+Note that now that we've switched again, the only way to switch the output back to the negative voltage is to go above $v_I = 7.5$ volts, at which point $v_O = A(7.5 - v_I)$ will turn negative.\\
+
+So, as can be seen in the rather messy analysis above, a signal like our sine wave will cause a clean square wave output, as the noise we had comes nowhere near $V_S/2$ or $-V_S/2$, and so the output won't switch more than once per intentional zero crossing. This trigger's inverting nature is also clear, as it only switches to a negative output when the input gets \emph{positive} enough.\\
+
+Let's go back to the noisy sine wave, and see how the same input looks through a Schmitt trigger, instead of a comparator:
+
+\begin{comment}
+Plot[{15 (Sin[x] + 1/3 Sin[25 x + \[Pi]/3]), f[x], 7.5, -7.5}, {x, 0, 
+  3 \[Pi]}, Filling -> {2 -> Axis}, 
+ PlotStyle -> {Automatic, Automatic, {Red, Dotted}, {Red, Dotted}}, 
+ Ticks -> {None, {-15, -7.5, 0, 7.5, 15}}, 
+ AxesLabel -> {"Time", "Volts"}]
+\end{comment}
+
+\includegraphics[scale=1.5]{Graphics/schmitt_noise}
+
+(Again, the filled areas are the output.)\\
+As in the textual example above, we start out with the input at $0$ volts (plus a whole ton of noise, which makes it start out closer to 5 than 0), and start the world with $v_o = 15$ V, and take it from there.\\
+Despite the extreme, exaggerated noise, the output is a perfectly clean square wave! Note how the output switches whenever the input crosses the $\pm 7.5$ V threshold set by the voltage divider, but only from ``one direction'' - for example, when the sine wave is starting to go up from its bottom position around the graph's middle, it crosses the -7.5 volt threshold without anything happening. In just this graph, the sine wave crosses the thresholds 6 times (6 intended times - not counting the extra ones due to the noise), but only switches 3 times. This is due to hysteresis - the past matters; which ``direction'' it comes from decides whether the output will switch or not.\\
+Also, of course, note how the output is an inversion of the input. It is however perfectly possible to build non-inverting Schmitt triggers.\\
+
+We can also vary the switching thresholds. The equation is 
+
+\[ V_{thres} = \pm v_I \cdot \frac{R_2}{R_1 + R_2} \]
+... where $R_2$ is the resistor between $v_+$ and ground.
+
+\newpage
+
+\section{Relaxation oscillator}
+We can use the inverting Schmitt trigger to make an op amp oscillator, by allowing a capacitor to control the $v_-$ voltage. The capacitor is then charged/discharged through a resistor connected to $v_o$, like this:\\
+
+\begin{circuitikz}
+\draw (0,3) node[op amp] (opamp) {} (0, 0);
+
+% Node voltage labels. Ugly hack!
+\draw (opamp.-) to [open] (-1.3, 3.25) node {$v_-$};
+\draw (opamp.+) to [open] (-1.3, 2.7) node {$v_+$};
+
+% Negative feedback cap -> v_o
+\draw (-1.6, 3.5) -- (-1.6, 4.5) to [R=$R_1$] (2, 4.5) -- (2, 3);
+
+% v_- label at the divider
+\draw (2,1) to [open] (2.5,1) node {\quad\quad $\displaystyle v_+ = \frac{v_o}{2}$};
+
+% Capacitor, output label, v_+ to divider
+\draw (opamp.-) to (-3, 3.5) to [C=$C$] (-3, 1) node [ground] {};
+\draw (opamp.out) to [short, -o] (3.5, 3) node {\quad\quad $v_o$};
+\draw (opamp.+) to (-1.6, 2.5) to (-1.6, 1) to (2, 1);
+
+\draw (2, 3) to [R=$R_2$, *-*] (2, 1)
+			  to [R=$R_2$, *-]  (2, -1);
+\draw (2, -1) node [ground] {} to (2, -1);
+\end{circuitikz}
+\ \\
+
+Notice that the bottom resistors are the same value, so that the thresholds are again set at $\pm V_S$.\\
+
+Let's take the usual intuitive look at how this would work. Imagine it starts out with the capacitor voltage (which is the same as $v_-$) at 0 volts, and $v_o$ at the positive rail, 15 volts (so -$V_S$ is then -15 volts).\\
+In this state, a current will flow from $v_o$ to $v_-$, due to the voltage difference (15 - 0 volts). This current flows through $R_1$, and has nowhere to go but through the capacitor, so the capacitor is charged by this current. It keeps charging along happily with no other change in the circuit, up until it passes just slightly above 7.5 volts ($V_S/2$). At that point, according to the op amp equation, $v_o = A(7.5 - v_-)$ will turn negative, and force $v_o$ down to the negative rail.\\
+When that happens, the capacitor voltage will be almost exactly $7.5$ volts, while $v_o$ will be at $-15$. Therefore the capacitor will discharge through $R_1$, until it's down to $V_S/2 = -7.5$ volts, at which point $v_o = A(-7.5 - v_-)$ will turn positive, and force $v_o$ to the positive rail. This cycle will repeat over and over, and produce - at least in theory - a perfect square wave, with a 50\% duty cycle (i.e. the ``on time'' is exactly equal to the ``off time'').\\
+
+Now, let's turn to calculating the oscillation frequency of this circuit. The way we do this is to calculate the rise time and the fall time for the RC circuit at the inverting input, and use that information to find the frequency.
+
+\subsection{Rise time}
+To calculate the rise time, let us define $t = 0$ such that the capacitor voltage is as low as it ever gets, i.e. $-V_S/2$. We can then use our old trusty formula $v_C = V_S + (V_0 - V_S)e^{-t/RC}$, and set that equal to the target voltage, $V_S/2$:
+
+\begin{align*} 
+ \frac{V_S}{2} &= V_S + (-\frac{V_S}{2} - V_S) e^{-t_r/RC}\\
+ \frac{V_S}{2} &= V_S - \frac{3V_S}{2} e^{-t_r/RC}
+\end{align*}
+
+To start with, we subtract $V_S$ from both sides, and then multiply by $-1$:
+
+\[ -\frac{V_S}{2} = - \frac{3V_S}{2} e^{-t_r/RC} \]
+\[ \frac{V_S}{2} = \frac{3V_S}{2} e^{-t_r/RC} \]
+
+We can now divide both sides by $\displaystyle \frac{3 V_S}{2}$, which is the same as multiplying by $\displaystyle \frac{2}{3 V_S}$:
+
+\[ \frac{V_S}{2} \cdot \frac{2}{3 V_S} = \frac{2}{3 V_S} \cdot \frac{3V_S}{2} e^{-t_r/RC} \]
+\[ \frac{\cancel{V_S}}{\cancel{2}} \cdot \frac{\cancel{2}}{3 \cancel{V_S}} = e^{-t_r/RC} \]
+
+This remains:
+
+\[ \frac{1}{3} = e^{-t_r/RC} \]
+
+We take the natural log of both sides, and multiply both sides by -RC:
+
+\[ \ln{\left(\frac{1}{3}\right)} = -\frac{t_r}{RC} \]
+\[ -RC \ln{\left(\frac{1}{3}\right)} = t_r \]
+
+Via log rules, $\ln{(1/3)} = \ln{(1)} - \ln{(3)} = 0 - \ln{(3)}$:
+
+\[ t_r = RC \ln{(3)} \]
+
+Ah, finally: we know the rise time. Next up: fall time.
+
+\subsection{Fall time}
+For the fall time, we use the same equation $v_C = V_S + (V_0 - V_S)e^{-t/RC}$, but plug in other values for the variables, and then set it equal to the target value of $-V_S/2$. Remember that the ``supply'' that is ``charging'' the capacitor is now $-V_S$, and the initial voltage now $V_S/2$:
+
+\[ -\frac{V_S}{2} = -V_S + (\frac{V_S}{2} - (-V_S))e^{-t_f/RC} \]
+\[ -\frac{V_S}{2} = -V_S + \frac{3 V_S}{2} e^{-t_f/RC} \]
+
+Compare this form to the rise time:
+
+\[ \frac{V_S}{2} = V_S - \frac{3V_S}{2} e^{-t_r/RC} \]
+
+If we multiply both sides of the fall time equation by $-1$, we can easily see that these equations are exactly the same, which means the answer must also be the same!
+
+\[ t_f = t_r = RC \ln{(3)} \]
+
+\subsection{Frequency}
+Frequency is the inverse of cycle time, and $t_r + t_f$ make up one full cycle. Therefore,
+
+\[ f = \frac{1}{t_r + t_f} = \frac{1}{2 RC \ln{(3)}} \]
+
+If the negative supply is not equal to exactly $-V_S$, the formula above (and its derivation) becomes quite a bit more complex. We will not worry about that case, as having equal supplies to within a small margin of error is common.
+
 
 %%%%%%%%%%%%%%%%%%%%%
 %%% Miscellaneous %%%
