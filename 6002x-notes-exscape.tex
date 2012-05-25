@@ -1351,6 +1351,32 @@ This isn't really news, since we knew the values of $\alpha$ and $\omega_0$ for 
 \[ Q = \frac{w_0}{2\alpha} = \frac{ \frac{1}{\sqrt{LC}} }{ \frac{R}{L} } = \frac{L}{R\sqrt{LC}} \]
 \[ \Delta\omega = 2 \alpha = \frac{R}{L} \]
 
+We can use these values to find the part values we need. $\omega_0$ is the \emph{center frequency} of the filter, so if we calculate the center frequency we want and set that equal to $\omega_0$, that should be a start. After that, we can set $\Delta \omega$ equal to the bandwidth we wanted.\\
+Two equations, three unknowns, but to make our lives easier we can simply choose one value ourselves.\\
+
+Let's calculate the center frequency. This isn't quite as simple as taking the arithmetic mean $\displaystyle \frac{f_1 + f_2}{2}$, which would give us $\displaystyle \frac{1000 + 10000}{2} = 5500$ Hz. Instead, we need to take the \emph{geometric mean}, which is defined as $\sqrt[n]{a_1 \cdot a_2 \cdots a_{n-1} \cdot a_{n}}$ - that is, multiply the number together, and take the $n$th root of the product, where $n$ is the count of numbers. So, the center frequency we want is computed as
+
+\[ \omega_1 = f_1 \cdot 2\pi = 1000 \cdot 2 \pi \]
+\[ \omega_2 = f_2 \cdot 2\pi = 10000 \cdot 2 \pi \]
+\[ \omega_0 = \sqrt{w_1 \cdot w_2} = \sqrt{(1000 \cdot 2\pi)(10000 \cdot 2\pi)} = 2000 \pi \sqrt{10} \]
+
+Now that we have one of the two values we wanted, let's find the bandwidth we want. That one's easy - it's just the difference between the higher and the lower corner frequencies, in this case 10 kHz and 1 kHz, respectively.
+
+\[ \Delta \omega = \omega_2 - \omega_1 = 10000 \cdot 2\pi - 1000 \cdot 2\pi = 9000 \cdot 2\pi \]
+
+Now all that remains is to solve the system of equations we get for these two, setting our $\omega_0$ equal to the circuit equation, and doing the same for the bandwidth:
+
+\[ \frac{1}{\sqrt{LC}} = 2000\pi \sqrt{10} \]
+\[ \frac{R}{L} = 9000 \cdot 2\pi \]
+
+If we solve these, we get
+
+\[ L = \frac{R}{18000 \pi},\text{ } C = \frac{9}{20000 \pi R} \]
+
+
+%%%%%%%%%%%%%%%%% This part has been rewritten %%%%%%%%%%%%%%%%%%%%%%%%
+\begin{comment}
+
 Then, let's calculate the magnitude and phase equations. Let's go back to the form we had before we divided through by LC, since it looks a bit cleaner. Let's then make the substitution for $s = j\omega$, and see what happens:
 
 \[ \frac{V_o}{V_i} = \frac{s^2LC + 1}{1 + sRC + s^2LC} \]
@@ -1383,7 +1409,10 @@ If we solve these simultaneous equations, the answers given are
 \[ L = \frac{R}{1800\pi} \]
 \[ C = \frac{9}{200000\pi R} \]
 
-So, for $R = 10 \Omega$, the values are roughly $L = 0.1768$ mH and $C = 14.324\mu$F.\\
+\end{comment}
+%%%%%%%%%%%%%%%%% This part has been rewritten %%%%%%%%%%%%%%%%%%%%%%%%
+
+So, for $R = 680 \Omega$, the values are roughly $L = 12.025$ mH and $C = 210.65$ nF.
 
 Here are the Bode plots for the resulting filter:
 
@@ -1426,10 +1455,9 @@ Without the discontinuity, the phase plot looks like this:
 
 \includegraphics[scale=1.4]{Graphics/bsf_phase_plot_no_disc}
 
-It looks like our filter works! However, there are some caveats here. For one, in actual circuits, it's hard to find $\approx 14 \mu$F capacitors that are suitable for filters, due to nonlinearities in electrolytic capacitors. (Most capacitors with values higher than the low-microfarad range are electrolytics; especially once you get to far higher capacitance values.)\\
-In addition, they are usually polarized, and as such cannot tolerate negative voltages.\\
-Also, the current through this filter will be very high if the signal source has a low impedance.\\
-All in all, however, it pretty much works - not bad for a first-ever try in filter design, especially  considering that low-pass/high-pass filters with only two components are quite a bit easier.
+It looks like our filter works! However, it's not perfect; the inductor value is relatively high. We could get the same filter with other values, but the capacitor value would have to increase instead.\\
+There are other ways to make band stop filters. In particular, op amps will make it easier.\\
+All in all, however, it does pretty much work - not bad for a first-ever try in filter design, especially  considering that low-pass/high-pass filters with only two components are quite a bit easier.
 
 \newpage
 
