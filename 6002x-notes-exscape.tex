@@ -43,6 +43,10 @@
 \usepackage{siunitx}
 \usepackage[american,siunitx]{circuitikz}
 
+% \bar{} is a bit too small (and grey?), \overline{} is a bit too wide!
+% Here's a compromise:
+\newcommand{\overbar}[1]{\mkern 1.5mu\overline{\mkern-1.5mu#1\mkern-1.5mu}\mkern 1.5mu}
+
 \begin{document}
 
 \maketitle
@@ -2473,7 +2477,7 @@ We can also vary the switching thresholds. The equation is
 \newpage
 
 \section{Relaxation oscillator}
-We can use the inverting Schmitt trigger to make an op amp oscillator, by allowing a capacitor to control the $v_-$ voltage. The capacitor is then charged/discharged through a resistor connected to $v_o$, like this:\\
+We can use the inverting Schmitt trigger to make an op amp oscillator, by allowing a capacitor to control the $v_-$ voltage. The capacitor is then charged/discharged through a resistor connected to $v_o$, like this:
 
 \begin{circuitikz}
 \draw (0,3) node[op amp] (opamp) {} (0, 0);
@@ -2483,7 +2487,7 @@ We can use the inverting Schmitt trigger to make an op amp oscillator, by allowi
 \draw (opamp.+) to [open] (-1.3, 2.7) node {$v_+$};
 
 % Negative feedback cap -> v_o
-\draw (-1.6, 3.5) -- (-1.6, 4.5) to [R=$R_1$] (2, 4.5) -- (2, 3);
+\draw (-1.6, 3.5) -- (-1.6, 4.5) to [R=$R$] (2, 4.5) -- (2, 3);
 
 % v_- label at the divider
 \draw (2,1) to [open] (2.5,1) node {\quad\quad $\displaystyle v_+ = \frac{v_o}{2}$};
@@ -2493,13 +2497,13 @@ We can use the inverting Schmitt trigger to make an op amp oscillator, by allowi
 \draw (opamp.out) to [short, -o] (3.5, 3) node {\quad\quad $v_o$};
 \draw (opamp.+) to (-1.6, 2.5) to (-1.6, 1) to (2, 1);
 
-\draw (2, 3) to [R=$R_2$, *-*] (2, 1)
-			  to [R=$R_2$, *-]  (2, -1);
+\draw (2, 3) to [R=$R_1$, *-*] (2, 1)
+			  to [R=$R_1$, *-]  (2, -1);
 \draw (2, -1) node [ground] {} to (2, -1);
 \end{circuitikz}
-\ \\
 
 Notice that the bottom resistors are the same value, so that the thresholds are again set at $\pm V_S$.\\
+The ``top'' resistor $R$ is the only one that matters for the rise/fall times, while the ``bottom'' ones are the only ones that matter for setting the switching thresholds.\\
 
 Let's take the usual intuitive look at how this would work. Imagine it starts out with the capacitor voltage (which is the same as $v_-$) at 0 volts, and $v_o$ at the positive rail, 15 volts (so -$V_S$ is then -15 volts).\\
 In this state, a current will flow from $v_o$ to $v_-$, due to the voltage difference (15 - 0 volts). This current flows through $R_1$, and has nowhere to go but through the capacitor, so the capacitor is charged by this current. It keeps charging along happily with no other change in the circuit, up until it passes just slightly above 7.5 volts ($V_S/2$). At that point, according to the op amp equation, $v_o = A(7.5 - v_-)$ will turn negative, and force $v_o$ down to the negative rail.\\
@@ -2560,6 +2564,428 @@ Frequency is the inverse of cycle time, and $t_r + t_f$ make up one full cycle. 
 \[ f = \frac{1}{t_r + t_f} = \frac{1}{2 RC \ln{(3)}} \]
 
 If the negative supply is not equal to exactly $-V_S$, the formula above (and its derivation) becomes quite a bit more complex. We will not worry about that case, as having equal supplies to within a small margin of error is common.
+
+\chapter{Energy and power in digital circuits}
+
+\section{Power usage for an NMOS inverter}
+
+Let's look at the power usage of our good old resistor/MOSFET inverter. However, we'll add a capacitance between $v_O$ and ground, to model the capacitance being driven (the input of other gates, perhaps, and the parasitic capacitances in the wires).\\
+
+\begin{circuitikz}
+
+\draw (0, 3) to [R=$R_L$] (0, 1) to [Tnmos, n=NMOS, mirror] (0, -1);
+\draw (0, 1) [short, *-] to (2, 1) node {\quad\quad $v_O$};
+% output capacitor
+\draw (2, -1) node [ground] {} to [C=$C$] (2, 1);
+\draw (NMOS.gate) to (-1.5, 0) node {$v_I$\quad\quad\quad};
+\draw (0, -1) node [ground] {};
+
+% VS - ugly, but I can't find the "up arrow" style supply
+\draw (-3.5, -1) node [ground] {} to [V=$V_S$] (-3.5, 1) -- (-3.5, 3) -- (0, 3);
+
+\end{circuitikz}
+\ \\
+
+Using the SR model for the MOSFET, and considering the case for a static $v_I$, which means the capacitor will act as a long-term open circuit, this circuit is equivalent to the previous one:\\
+
+\begin{circuitikz}
+
+\draw (0, 3) to [R=$R_L$] (0, 1) to [ospst, n=NMOS] (0, -1);
+\draw (0, 1) [short, *-o] to (1, 1) node {\quad\quad $v_O$};
+\draw (-1.5, 0) to [short, -o] (-0.5, 0) node {$v_I$\quad\quad\quad\quad\quad\quad\quad\quad}; % Eww.
+\draw (0, -1) to [R=$R_{ON}$] (0, -3);
+\draw (0, -3) node [ground] {};
+
+% VS - ugly, but I can't find the "up arrow" style supply
+\draw (-3.5, -3) node [ground] {} to [V=$V_S$] (-3.5, 3) -- (0, 3);
+
+\end{circuitikz}
+\ \\
+
+We will use this circuit to calculate this inverter's \emph{static power}, i.e. the power used when the output is not switching, but either constantly low or constantly high.\\
+How do we calculate the power used by this circuit? Doing so is of course extremely simple. There are two cases, switch open and switch closed.\\
+
+Switch open: no current flows, and so the power usage is zero.\\
+Switch closed: A current $\displaystyle \frac{V_S}{R_L + R_{ON}}$ flows (we assume the switch is ideal and has 0 resistance). The power usage is that current squared times the resistance, or (much simpler) via $\displaystyle P = \frac{V^2}{R}$, just
+
+\[ P = \frac{{V_S}^2}{R_L + R_{ON}} \]
+
+Since there are two cases with vastly different power draws, we can use the average of the two: if we assume a 50\% probability for the gate to be on, and 50\% for it to be off, the average power is roughly
+
+\[ \overbar{P_{static}} = \frac{ \frac{{V_S}^2}{R_L + R_{ON}} + 0}{2} \]
+\[ \overbar{P_{static}} = \frac{{V_S}^2}{2(R_L + R_{ON})} \]
+
+So, we now know the static power of this circuit.\\
+The reason we average the two cases is not that any single inverter is going to be at each state an equal amount of time, but rather that on a chip with millions or even billions of such gates, we consider the probability of any given one to be either on or off to be 50\%.\\
+
+As you might expect, there's a counterpart to static power called \emph{dynamic power}, which is the power used when switching the inverter at a certain frequency.\\
+Unfortunately, the derivation of that expression is rather messy, though not strictly \emph{hard}. Only techniques previously discussed are required, so it will be left as an exercise to the reader, if you are interested. If not, read on.\\
+
+This circuit is equivalent to the inverter circuit, if we use the SR model for the MOSFET once again:
+
+\begin{circuitikz}[scale=1.2]
+\draw (0,0) node [ground] {} to [V=$V_S$] (0,3)
+					  to [R=$R_L$]     (3,3)
+					  to [C=$C$]	(3,0);
+
+\draw (3.5, 3) [open, l=$v_O$] to (3.5, 4);
+
+\draw (3,3) -- (6,3) to [ospst] (6, 2) to [R=$R_{ON}$] (6, 0);
+
+\draw (6,0) to (0,0);
+\end{circuitikz}
+\ \\
+
+If we drive the input with a square wave with a 50\% duty cycle - that is, the on time is exactly equal to the off time, it turns out (this is the skipped derivation, of course) that the dynamic power is
+
+\[ \overbar{P_{dynamic}} = C {V_S}^2 f \frac{{R_L}^2}{(R_L + R_{ON})^2} \]
+
+Let's add the static power to that:
+
+\[ \overbar{P} = \overbar{P_{static}} + \overbar{P_{dynamic}} \]
+\[ \overbar{P} = \frac{{V_S}^2}{2(R_L + R_{ON})} + C {V_S}^2 f \frac{{R_L}^2}{(R_L + R_{ON})^2} \]
+
+That's a slightly complex expression, but we can simplify it quite nicely. $R_L$ is usually much greater than $R_{ON}$, to the point where we can simply neglect $R_{ON}$. Doing so, the equation reduces to
+
+\[ \overbar{P} = \frac{{V_S}^2}{2R_L} + C {V_S}^2 f \frac{{R_L}^2}{{R_L}^2} \]
+
+Ah! Now we can get rid of the entire fraction to the very right:
+
+\[ \overbar{P} = \frac{{V_S}^2}{2R_L} + C {V_S}^2 f \]
+
+Not bad! Note how the dynamic power depends on three things: the capacitance $C$ (a linear dependence), the switching frequency $f$ (also a linear dependence) and the supply voltage $V_S$ - a quadratic dependence! Halving the supply voltage cuts the dynamic power usage in four!\\
+
+Now, let's run some example numbers for a hypothetical chip we might want to build. Say we have a chip with \emph{5 million} of these inverter gates, with $R_L = 10\text{k} \Omega$, $C = 1$ fF ($10^-15$ F) and $V_S = 5$ volts, and we will run it at 3 GHz. Let's put these numbers into the power equation:
+
+\[ \overbar{P} = \frac{{V_S}^2}{2R_L} + C {V_S}^2 f \]
+\begin{align*}
+  P &= 5\cdot 10^6 \left[ \frac{5^2}{2 \cdot 10000} + 10^{-15} \cdot {5}^2 \cdot 3 \cdot 10^9 \right] \\
+    &= 5\cdot 10^6 \left[ 1.25 \text{ mW} + 75 \text { } \mu \text{W} \right] \\
+    &= 6250 + 375 = 6625 \text { W}
+\end{align*}
+
+... so this chip apparently consumes, on average, \emph{6.625 kilowatts} of power!!! That's enough to power 50-100 modern quad-core CPUs, and our relatively simple chip only has 5 million gates, which means we are probably a bit over a decade behind Intel's and AMD's current offerings! This is clearly untenable. The next section will discuss a means to eliminate \emph{all} of the static power, and also list various ways to bring the dynamic power down to more reasonable levels. 375 watts is possible to cool, but not in a way that is both quiet and cheap.\\
+As of mid-2012, Intel's  top-end mainstream CPUs (not their most extreme ones, but the kind most enthusiasts would buy) have a Thermal Design Power (TDP) of 77 watts, down from 95 watts in the previous generations. Actual consumption values can be (much) lower due to power saving when not at full load, however.
+
+
+
+\section{The P-channel MOSFET}
+
+\large{Note to 6.002x students (as I expect virtually all readers to be): this section is NOT covered on the final exam.}\\
+\normalsize
+
+Remember that the static power for the inverter was divided into two cases: low input (MOSFET switch open) where static power was zero - excellent! - and high input (MOSFET switch closed), where the static power was very high - at least if we consider millions of gates. The reason that there was power dissipation when the MOSFET is closed is that there is a path for the current to flow from $V_S$ to ground. If we could remove this path, for example by placing a switch in place of $R_L$, that was closed whenever the pulldown MOSFET was open, and vice versa, could solve our problem.\\
+
+Fortunately, such a switch exist, and it's a different kind of MOSFET. The MOSFETs we've used so far are N-channel MOSFETs, named as such because the channel that forms between the source and drain terminals is made up of electrons - negative charge carriers.\\
+The complementary MOSFET is known as the P-channel MOSFET. Here, as expected, the channel that forms is made up of positive charge carriers - ``holes'', which are the absense of electrons.\\
+
+\begin{circuitikz}
+\draw	(0,0) node[nmos] (nmos) {}
+%		(mos.base) node[anchor=west] {B}
+		(nmos.gate) node[anchor=east] {G}
+		(nmos.drain) node[anchor=south] {D}
+		(nmos.source) node[anchor=north] {S};
+
+\node at (-0.5, -2) {N-channel};
+\node at (2.7, -2) {P-channel};
+
+\draw (1,-2) to (1,2);
+
+\draw	(3,0) node[pmos] (pmos) {}
+%		(mos.base) node[anchor=west] {B}
+		(pmos.gate) node[anchor=east] {G}
+		(pmos.drain) node[anchor=north] {D}
+		(pmos.source) node[anchor=south] {S};
+
+\end{circuitikz}
+\ \\
+
+Before we discuss how the P-channel MOSFET works, let's review the N-channel.\\
+As we remember, the N-channel MOSFET (in the SR model) is off/open when $v_{GS} < V_T$, and on/closed when $v_{GS} \ge V_T$, where $v_{GS}$ is the voltage from gate to source, which is always positive. (If it's negative, we switch the drain/source terminals with each other, so that $v_{GS}$ becomes positive.)\\
+
+For the P-channel MOSFET to be complementary, or in fact for it to be useful here, it needs to have the opposite behavior, and it does. We still measure $v_{GS}$, but note in the schematic symbol above that the source is now ``on top'', and will connect to the power rail. Therefore, the source voltage is usually higher than the gate voltage (when both are taken with respect to ground), as opposed to the pulldown N-channel we've used in previous inverters, where we always connect the source to ground.\\
+The P-channel MOSFET is on/closed when $v_{GS} \le V_T$ and off/open when $v_{GS} > $V_T$.\\
+
+For example, let's say $V_S$ is 5 volts, and we connect the source to $V_S$ and the drain directly to ground (just for this experiment). If the gate is also connected to ground, $v_{GS}$ will be $0 - 5$ = $-5$ volts. If $V_T$ is, say, $-1$ volts, $v_{GS} \le V_T$, so the MOSFET is on, and current flows through it. Clearly, for this configuration and these values, the MOSFET will be on as long as the gate voltage (with respect to ground) is less than or equal to 4 volts. If we make it 5 volts, however, $v_{GS}$ will no longer be less than or equal to $V_T$, since we will have $v_{GS} = 5 - 5 = 0$.
+
+\newpage
+
+\section{CMOS logic}
+
+\large{Note to 6.002x students (as I expect virtually all readers to be): this section is NOT covered on the final exam.}\\
+\normalsize
+
+We can now begin using the P-channel MOSFET in our gates. Gates designed using a combination of P-channel and N-channel MOSFETs are known as CMOS gates, for Complementary MOS.\\
+The introduction of CMOS was a revolution for computing and electronics in general, as it virtually eliminates static power entirely. In modern microprocessors, leakage current is one of the bigger problems, which only increases as transistors become smaller and smaller with increasingly advanced technology nodes. However, leakage current will not be discussed here.\\
+
+Now, let's get on with it. Our new, nice CMOS inverter looks just about you'd expect: we replace $R_L$ with a P-channel MOSFET:\\
+
+\begin{circuitikz}
+
+\draw (0, 3) to [Tpmos, n=PMOS, mirror] (0, 1) to [Tnmos, n=NMOS, mirror] (0, -1);
+\draw (0, 1) [short, *-] to (2, 1) node {\quad\quad $v_O$};
+% output capacitor
+\draw (2, -1) node [ground] {} to [C=$C$] (2, 1);
+\draw (NMOS.gate) to (-1.5, 0);
+\draw (-1.5, 0) -- (-1.5, 2) -- (PMOS.gate);
+\draw (-1.5, 1) to [short, -o] (-2.5, 1) node {$v_I$\quad\quad\quad};
+
+\draw (0, -1) node [ground] {};
+
+% VS - ugly, but I can't find the "up arrow" style supply
+\draw (-3.5, -1) node [ground] {} to [V=$V_S$] (-3.5, 1) -- (-3.5, 3) -- (0, 3);
+
+\end{circuitikz}
+\ \\
+(Note that the capacitor meant to model the load capacitances etc. remains, as we will soon analyze the power usage for this circuit with those capacitances included.)\\
+
+Since the one input goes to the gates of both MOSFETs, as long as we don't have $v_I$ in the circuit's forbidden region (that is, we avoid $V_{IL} < v_I < V_{IH}$), the MOSFETs should never be on at the same time. Of course, if they were to be on at the same time, a very large current would flow through them (as long as $R_{ON}$ is small for both MOSFETs), which is highly undesirable.\\
+
+Now, let's analyze the power usage of this inverter! Due to the nature of the CMOS logic, there will never be a direct path from $V_S$ to ground through a resistance ($R_{ON}$), only through the capacitor, which acts like an long-term open circuit. Therefore the resistance between $V_S$ and ground is always infinite for the static power case (constant/non-switching input), and so the static power is zero! As mentioned earlier, due to leakage currents and other such effect (quantum effects and so on), this is not quite true. However, compared to the previous NMOS inverter with a $>6$ kW power draw per 5 million gates, it might as well be zero.\\
+So, if the static power is zero, let's calculate the dynamic power.\\
+
+If we use the SR model for both MOSFETs, this circuit is fully equivalent:\\
+
+\begin{circuitikz}
+% Ground, VS, PMOS
+\draw (0, 0) node [ground] {} to [V=$V_S$] (0, 3) to [cspst, l=$S_{PMOS}$] (2, 3) to [R=$R_{ON_P}$] (4, 3);
+
+% Capacitor
+\draw (4, 3) to [C=$C$] (4, 0);
+
+% NMOS
+\draw (4,3) to [ospst, l=$S_{NMOS}$] (6,3);% -- (8, 3);
+\draw (6,3) to [R=$R_{ON_N}$] (8, 3) -- (8, 0);
+
+% Connect them up
+\draw (8,0) to (0, 0);
+
+% v_O label
+\draw (4.55,3) to [open, l=$v_O$] (4.55, 3.7);
+
+\end{circuitikz}
+\ \\
+
+Compare the two until you're convinced that they are equal!\\
+Now, remember that the switches are never closed, and never open, at the same time. If the PMOS switch is closed, that means the NMOS switch is open, and vice versa.\\
+Now, we will consider the case when this circuit is driven by a square wave, yet again with a 50\% duty cycle. Let's call the time when the PMOS switch is closed $T_1$, and the time when the NMOS switch is closed $T_2$. $T = T_1 + T_2$ is then the cycle time, and $\displaystyle f = \frac{1}{T}$ is the switching frequency. Our goal is to find the average dynamic power. We'll start by considering the case where the PMOS switch is closed and the NMOS switch open, i.e. when the input is low and output is high ($S_{PMOS}$ connects $v_O$ to $V_S$, while $S_{NMOS}$ is an open circuit), i.e. we'll calculate the energy supplied by the voltage source during $T_1$.
+
+\subsection{Energy supplied during $T_1$}
+Okay. So when the PMOS switch is closed, we can replace it with a short circuit, while the NMOS switch can be replaced with an open, which makes the entire NMOS fall out of the circuit:
+
+\begin{circuitikz}
+% Ground, VS, PMOS
+\draw (0, 0) node [ground] {} to [V=$V_S$] (0, 3) to [R=$R_{ON_P}$] (3, 3) -- (4,3);
+
+% Capacitor
+\draw (4, 3) to [C=$C$] (4, 0);
+
+% NMOS
+%\draw (4,3) to [ospst, l=$S_{NMOS}$] (6,3);% -- (8, 3);
+%\draw (6,3) to [R=$R_{ON_N}$] (8, 3) -- (8, 0);
+
+% Connect them up
+\draw (4,0) to (0, 0);
+
+% v_O label
+\draw (4.55,3) to [open, l=$v_O$] (4.55, 3.7);
+
+\end{circuitikz}
+\ \\
+
+Well, this looks simple enough. We know that for a series RC circuit with a step input, the waveform is either a rising exponential or a decaying exponential. If we assume that the initial capacitor voltage is zero, which we will (we'll assume that the switch is closed long enough for it to charge fully, and in the next step of analysis, the NMOS switch is closed long enough for it to \emph{dis}charge fully), we get the two common forms for the capacitor voltage and current, respectively:
+
+\[ v_C(t) = V_S(1 - e^{-\frac{T_1}{R_{ON_P} C}}) \]
+
+\[ i_C(t) = \frac{V_S}{R_{ON_P}} e^{-\frac{T_1}{R_{ON_P} C} \]
+
+We want to calculate the total energy supplied by the source, however, not the energy stored in the capacitor. We know that $P = VI$, but the V in question will be the supply voltage, not the capacitor voltage. We can however use the capacitor current, since this is a series circuit, and that current must be equal to the supply current.\\
+Since the current is changing, we can't simply multiply the two. Instead, we need to integrate over the interval $[0, T_1]$:
+
+\[ E = \int_0^{T_1} V_S \cdot i_C(t) dt \]
+\[ E = \int_0^{T_1} V_S \frac{V_S}{R_{ON_P}} e^{-\frac{T_1}{R_{ON_P} C} dt \]
+
+We can move the fraction outside, as it's made up of constants only:
+
+\[ E = \frac{{V_S}^2}{R_{ON_P}} \int_0^{T_1} e^{-\frac{T_1}{R_{ON_P} C} dt \]
+
+To speed things up, we'll use the remembered result that
+
+\[ \int e^{a x} dx = \frac{e^{a x}}{a} + C \]
+
+so:
+
+\[ E = \frac{{V_S}^2}{R_{ON_P}} \left[ -R_{ON_P} C e^{-\frac{T_1}{R_{ON_P} C}} \right]_0^{T_1} \]
+\[ E = {V_S}^2 \left[ -C e^{-\frac{T_1}{R_{ON_P} C}} \right]_0^{T_1} \]
+
+If we evaluate this expression at 0, the exponential goes to 1, so we end up with
+
+\[ E = {V_S}^2 \left[ -C e^{-\frac{T_1}{R_{ON_P} C}} + C \right]
+
+\[ E = {V_S}^2 \left[ C \left( 1 - e^{-\frac{T_1}{R_{ON_P} C}} \right) \right] \]
+
+\[ E = {V_S}^2 C - {V_S}^2 C e^{-\frac{T_1}{R_{ON_P} C}} \]
+
+Phew. We can simplify the above, however. Remember that we said that we would let the capacitors change and discharge fully\footnote{Mathematically, this would take infinite time. In practice, 5 time constants or so is usually close enough to consider the process pretty much done.}. Therefore we can assume that $T_1 \gg R_{ON_P} C$ (since several time constants must pass during $T_1$ for it to discharge) which means the second term goes to 0, and all that remains is
+
+\[ E_{T1} \approx {V_S}^2 C \]
+
+Aha! We now know the energy supplied by the source during $T_1$ (when the PMOS switch is the one that's closed). Now for some bad news.\\
+Recall that we let the capacitor charge fully. Also recall that the formula to calculate energy stored on a capacitor is $\displaystyle \frac{1}{2} C V^2$. Here, we charge it all the way to $V_S$, so the energy stored on the capacitor is $\displaystyle \frac{1}{2} C {V_S}^2$. However, if we compare this to $E_{T1}$ above, this is only (exactly) \emph{half} of the energy supplied! We could integrate the power dissipated by the resistor, or we could get the same result by using conservation of energy: the rest of the energy, i.e. half of it, must have dissipated through the resistor (i.e. the MOSFETs $R_{ON_P}$)!\\
+It appears that no matter what we do, half the energy will be lost as heat, while the other half remains usable in the capacitor. Bummer. Well, at least now we know why dynamic power even exists.\\
+Next, let's find the energy dissipated during $T_2$.
+
+\subsection{Energy dissipated during $T_2$ and total energy used}
+
+Thankfully, this subsection will be much shorter than the previous one. With the PMOS switch now open, and the NMOS switch closed, the equivalent circuit is simply this:
+
+\begin{circuitikz}
+% Ground, cap
+\draw (0, 0) node [ground] {} to [C=$C$] (0, 3) -- (3, 3);% to [R=$R_{ON_P}$] (3, 3) -- (4,3);
+
+% Resistor
+\draw (3,3) to [R=$R_{ON_N}$] (3, 0);
+
+% Connect them up
+\draw (3,0) to (0, 0);
+
+% v_O label
+\draw (2,3) to [open, l=$v_O$] (2, 3.7);
+
+\end{circuitikz}
+\ \\
+
+Again, remember that we said we would give the capacitor time to discharge fully. Therefore, all of the energy stored on it ($\displaystyle \frac{1}{2} C {V_S}^2$) must be dissipated through the resistor, and that's that.\\
+Also, note that the source is not connected to this circuit, so it clearly doesn't draw any additional power. Therefore, the total energy supplied by the source is given by $E_{T1} + 0$, so $E = E_{T1}$.\\
+
+Now that we know the total energy, we can calculate the average power. Power is just energy over time, so to find the average, we can simply divide the two:
+
+\[ \overbar{P} = \frac{E}{T} \]
+where $T = T_1 + T_2$. Since frequency is the reciprocal of T, the period, we can equivalently write
+
+\[ \overbar{P} = E f = C {V_S}^2 f \]
+
+Ah! So we've finally found the dynamic power usage by this CMOS inverter, and therefore also the total power usage (since the static power usage is zero)!\\
+Note that this equation for the CMOS inverter's power usage is the same as the equation for the old NMOS/resistor inverter's dynamic power usage. Therefore, we already know the power usage for our example scenario, but let's duplicate the results here. Again, we use $V_S = 5$ volts, $C = 1$ fF and $f = 3 \cdot 10^9$ Hz (3 GHz), and multiply that times 5 million gates:
+
+\[ \overbar{P} = C {V_S}^2 f \]
+\begin{align*}
+  \overbar{P} &= 5\cdot 10^6 \left[ 10^{-15} \cdot {5}^2 \cdot 3 \cdot 10^9 \right] \\
+    &= 5\cdot 10^6 \left[ 75 \text { } \mu \text{W} \right] \\
+    &= 375 \text { W}
+\end{align*}
+
+Way, way better than the old inverter's 6.6 kilowatts, but still not acceptable. What can we do next? Well, there are several ways to reduce dynamic power, three of which are obvious from the above equation: we can reduce the load capacitance, reduce the supply voltage, and reduce the frequency.\\
+Reducing the frequency might not be desirable, though, since that will reduce chip performance.\\
+
+Let's have a look at reducing the power usage of this chip.
+
+\subsection{Reducing CMOS power usage}
+
+Reducing $V_S$ looks like a good idea to begin with. In fact, the 5 volts we've used places our technology a bit in the past; the last ``PC microprocessor'' (that is, for regular home use) to use a 5 volt core voltage was the Pentium, around 1996. Modern CMOS chips use supplies as low as 1 volt or even lower. If we were to run our chip above on $V_S = 1$ volt, the power would come down all the way to 15 watts!\\
+Of course, we can't simply reduce the supply voltage until we're at virtually zero. Remember that lower voltages lead to smaller currents, which lead to longer capacitor changing times, and thus, in the end, slower chip operation. In addition, things such as a MOSFETs $V_T$ can't go arbitrarily low. Still, 1 volt is enough for modern chips to run as fast as they do.\\
+
+One of the main ways microprocessors go forward is by reducing the size of the chips. This is referred to as ``shrinking''. For example, perhaps the main difference between 2011's Sandy Bridge (the codename for Intel's Core i3/i5/i7 2xxx CPUs) and 2012's Ivy Bridge (Intel Core i3/i5/i7 3xxx) is a die shrink, from 32 nm to 22 nm. That size (22 nm) refers to the approximate size of the smallest transistors in the chip. The full definition is slighty complex.\\
+When doing such die shrinks, the gate capacitances tend to decrease, which leads to a reduction in dynamic power. In general, die shrinks also allow for a decrease in the supply voltage.\\
+
+What about the frequency? Well, as said before, we don't want to simply lower that too much, or performance will suffer. What we can do, and what is actually done in modern chips, is to vary it over time. For example, while the computer is idle, or doing something that is not very computationally intensive (web browsing, text editing), the processor can reduce its frequency, and only stay at the full frequency when really needed. Lower frequency also means the supply voltage can be reduced during those idle times, which further reduces power usage!\\
+
+Yet another way to reduce power usage is \emph{clock gating}. This technique can power down parts of a chip that aren't currently used. For example, the floating point-unit of a microprocessor might be currently unused, so we can disable the clock signal to it.\\
+Doing so is simple: we can (for some designs) use an AND gate, and connect the clock to one input of the AND gate, connect an enable line to the other, and the gate's output to the floating point-unit's clock input.\\
+When the enable line is low (0), the AND gate will produce a 0 on its output no matter whether the clock signal is high or low.\\
+What the enable line is high (1), the AND gate will reproduce the clock signal on its other input (as $A \cdot 1 = A$, the clock signal is passed through unchanged in this case).
+
+\section{CMOS logic gate design}
+\large{Note to 6.002x students (as I expect virtually all readers to be): this section is NOT covered on the final exam.}\\
+\normalsize
+
+This section doesn't really belong in this chapter, but it'll have to stay here for the moment. If I add a proper chapter on the digital abstraction, I'll move it there at that point.\\
+Using what we already know about digital gates and CMOS logic, we just need a small guideline to make designing CMOS gates easy.\\
+In our old NMOS gates, we had a simple resistor as a pullup, and N-channel MOSFETs as pulldowns. All we had to do was to configure the pulldown network, and we'd be done.\\
+For CMOS gates, we also need to configure the pullup network. However, doing so is rather simple.\\
+
+If we want to implement the logical function $F$, perhaps NAND, so that $F = \overbar{A \cdot B}$, we design it so that:
+
+%\begin{itemize}
+\item The pullup network is a short when $F$ is true, but an open otherwise
+\item The pulldown network is a short when $\overbar{F}$ is true, but an open otherwise
+%\end{itemize}
+
+We also only use P-channel MOSFETs for the pullup network, and only use N-channel MOSFETs for the pulldown network. That's all we need to do. We then insert those two networks into the ``CMOS gate template'', which looks like this:\\
+
+\begin{circuitikz}
+% VS - ugly, but I can't find the "up arrow" style supply
+\draw (-3.5, -3.1) node [ground] {} to [V=$V_S$] (-3.5, 3) -- (0, 3) to [short, -o] (0, 2.5);
+
+\draw (0, 0) to [short, o-o] (0, -0.5);
+\draw (0, -0.25) to [short, *-o] (2, -0.25) node {\quad\quad $Z$};
+\draw (0, -3) to [short, o-] (0, -3.1);
+
+\draw (0, -3.1) node [ground] {};
+
+% Pullup network box
+\draw [dashed] (-1.5, 0) -- (1.5, 0); % bottom line
+\draw [dashed] (1.5, 0)  -- (1.5, 2.5); % right-side
+\draw [dashed] (1.5, 2.5)    -- (-1.5, 2.5); % top
+\draw [dashed] (-1.5, 2.5)   -- (-1.5, 0); % left side
+\draw (-1.9, 1.25) to [open, l=Pullup] (2, 1.25);
+\draw (-2, 0.7) to [open, l=network] (2, 0.7);
+
+% Pulldown network box
+\draw [dashed] (-1.5, -0.5) -- (1.5, -0.5); % top line
+\draw [dashed] (1.5, -0.5)  -- (1.5, -3); % right-side
+\draw [dashed] (1.5, -3)    -- (-1.5, -3); % bottom
+\draw [dashed] (-1.5, -3)   -- (-1.5, -0.5); % left side
+\draw (-1.9, -1.9) to [open, l=Pulldown] (2, -1.9);
+\draw (-2, -2.45) to [open, l=network] (2, -2.45);
+\end{circuitikz}
+
+... where $Z$ is the logic function's output. The inputs are connected to the MOSFETs in the pullup and pulldown networks, of course.\\
+Remember that this topology is inverting by its very nature, so to make non-inverting functions such as AND/OR, we would make a NAND/NOR gate and then send that output to a NOT gate.\\
+
+Let's use what we now know to design a NOR gate. For NOR, the function is $F = \overbar{A + B}$, and the complement is $\overbar{F} = \overbar{\overbar{A + B}} = A + B$.\\
+
+We begin with the pulldown network, since we have designed NOR gates in the past. The pulldown remains the same as before, but let's go through the method anyway.\\
+We need transistors such that it is a short circuit when $\overbar{F} = A + B$ is true. That's just a regular OR function, which is true whenever either or both inputs is true, so we use two parallel N-channels here, so that it's a short when either input is true, but an open circuit when both are false.\\
+
+What about the pullup? Here, we need a short circuit when $F = \overbar{A + B}$ is true. This is (as the gate will be) NOR, which is true when both A and B are zero, and never otherwise. Therefore, this pullup network needs to be such that it's only a short circuit when $A = B = 0$, which we can do with two P-channel MOSFETs in series. (Remember that we only use P-channels for the pullup.)\\
+
+That concludes our gate design - all that remains is to display the result:\\
+
+\begin{circuitikz}
+% VS - ugly, but I can't find the "up arrow" style supply
+\draw (-3.5, -3.1) node [ground] {} to [V=$V_S$] (-3.5, 4.5) -- (0, 4.5) -- (0, 4);
+
+\draw (0, 0) to [short] (0, -0.5);
+\draw (0, -0.25) to [short, *-o] (2, -0.25) node {\quad\quad $Z$};
+%\draw (0, -3) to [short, o-] (0, -3.1);
+
+% Pulldown network
+\draw (-1, -0.5) -- (1, -0.5);
+\draw (-1, -0.5) to [Tnmos, n=PDA, mirror] (-1, -2.5);
+\draw (1, -0.5) to [Tnmos, n=PDB, mirror] (1, -2.5);
+\draw (-1, -2.5) -- (1, -2.5);
+% Pulldown network inputs
+\draw (PDA.gate) to (-1.7, -1.5) node {$A$\quad\quad\quad\quad};
+\draw (PDB.gate) to (0.3, -1.5) node {$B$\quad\quad\quad\quad};
+
+% Pullup network
+\draw (0, 4) to [Tpmos, n=PUA, mirror] (0, 2);
+\draw (0, 2) to [Tpmos, n=PUB, mirror] (0, 0);
+% Pullup network inputs
+\draw (PUA.gate) to (-1.1, 3) node {$A$\quad\quad};
+\draw (PUB.gate) to (-1.1, 1) node {$B$\quad\quad};
+
+% Pulldown network to ground
+\draw (0, -2.5) to [short, *-] (0, -3.1);
+\draw (0, -3.1) node [ground] {};
+
+\end{circuitikz}
+\ \\
+
+And we are done! The same method can be used to design NAND and NOT gates, which we can then combine to form any boolean logic function. (In fact, having nothing but NOR gates still makes that possible!)\\
+
+We can also make gates with more than two inputs this way. To turn the above into a 3-input NOR gate, we would simply add a ``C'' P-channel MOSFET in series with the other two pullups, and a ``C'' N-channel in parallel with the others in the pulldown network.
 
 
 %%%%%%%%%%%%%%%%%%%%%
