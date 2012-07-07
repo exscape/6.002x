@@ -97,6 +97,17 @@ For the special case of two components of the diminshing type (x being a dummy v
 
 \section{Digital}
 
+\subsection{Thresholds}
+
+\begin{itemize}
+\item $V_{OL}$: the \emph{highest} allowed output voltage for a logical 0 (lower is OK)
+\item $V_{IL}$: the \emph{highest} allowed input voltage for a logical 0 (higher would be in the forbidden region)
+\item $V_{IH}$: the \emph{lowest} allowed input voltage for a logical 1 (lower would be in the forbidden region)
+\item $V_{OH}$: the \emph{lowest} allowed output voltage for a logical 1 (higher is OK)
+\end{itemize}
+
+\[ 0 \le V_{OL} < V_{IL} < V_{IH} < V_{OH} \le V_S \]
+
 \subsection{Noise margins}
 \begin{align*}
   NM_H &= V_{OH} - V_{IH}\\
@@ -161,7 +172,7 @@ The voltage over an inductor is a function of the \emph{rate of change} of curre
 
 \[ v(t) = L \frac{di(t)}{dt} \]
 
-To find the current through a capacitor, we need to know its full history:
+To find the current through an inductor, we need to know its full history:
 
 \[ i(t) = \frac{1}{L} \int_{-\infty}^t v(t) dt \]
 
@@ -178,7 +189,9 @@ The energy stored in an inductor is:
 General equation for an increasing/decaying exponential in a RC/RL circuit:
 
 \[ v = V_S + (V_0 - V_S) e^{-t/RC} \]
-where v = the voltage across the capacitor or inductor.\\
+\[ i = \frac{V_S}{R} + (i_0 - \frac{V_S}{R}) e^{-Rt/L} \]
+
+where v = the voltage across the capacitor. For RL circuits, replace $V_S$ by the maximum current and $V_0$ by the initial current through the inductor. Above is for a thevenin equivalent circuit.\\
 
 ZIR / Zero Input Response, same as above with $V_S = 0$:
 
@@ -705,7 +718,8 @@ Using the scaled sum of sines trig identity, we can turn this cosine minus sine 
 
 \[ v(t) = V_I - V_I \frac{\omega_0}{\omega_d} e^{-\alpha t} \cos{(\omega_d t - \arctan{(\frac{\alpha}{\omega_d})})} \]
 
-While the equation is rather involved, it's still very clear that the two main features are a cosine multiplied by a decaying exponential, which will give us exactly the kind of waveform we see in a damped second-order system.
+While the equation is rather involved, it's still very clear that the two main features are a cosine multiplied by a decaying exponential, which will give us exactly the kind of waveform we see in a damped second-order system.\\
+However, another extraordinary detail hides in the equation. Note how the capacitor voltage is $V_I$ minus $V_I$ times a bunch of things that is always positive... except for the cosine. In fact, if $V_I$ is 5 volts, this circuit will oscillate between 0 and $10$ volts - yes, the capacitor voltage will be twice as high as the input step! Rather incredible.
 
 \subsection{Summary}
 Since this section was by \emph{far} the longest of this document so far, I thought a summary of the relevant formulas could be useful. Remember that most of these only apply to series RLC circuits, though some definitions (such as $\omega_d$) are universal.\\
@@ -1122,6 +1136,7 @@ There are 4 main types of filters: low-pass, high-pass, band-pass and band-stop.
 
 \subsection{Series RLC band-pass filter}
 
+\label{sec:rlcbandpass}
 Since producing good-looking Bode plots for this document takes a while with my current process, I'll only make a few, by focusing on a RLC band-pass filter.
 
 \begin{circuitikz}[scale=1.2]
@@ -1280,7 +1295,7 @@ where $\Delta \omega$ is the \emph{bandwidth} of the filter:
 
 \[ \Delta \omega = \omega_2 - \omega_1 \]
 where $\omega_1$ and $\omega_2$ are the $\displaystyle \frac{1}{\sqrt{2}}$ points of the filter (see above).\\
-For the filter above:
+For the band-pass filter in section \ref{sec:rlcbandpass} (just prior to the ``peaky'' high-Q low-pass filter):
 
 \[ \omega_0 = \frac{1}{2\pi \sqrt{LC}} = 159.2 \text{ kHz} \]
 \[ \omega_1 = 7.938 \text{ kHz} \]
@@ -2507,7 +2522,7 @@ The ``top'' resistor $R$ is the only one that matters for the rise/fall times, w
 
 Let's take the usual intuitive look at how this would work. Imagine it starts out with the capacitor voltage (which is the same as $v_-$) at 0 volts, and $v_o$ at the positive rail, 15 volts (so -$V_S$ is then -15 volts).\\
 In this state, a current will flow from $v_o$ to $v_-$, due to the voltage difference (15 - 0 volts). This current flows through $R_1$, and has nowhere to go but through the capacitor, so the capacitor is charged by this current. It keeps charging along happily with no other change in the circuit, up until it passes just slightly above 7.5 volts ($V_S/2$). At that point, according to the op amp equation, $v_o = A(7.5 - v_-)$ will turn negative, and force $v_o$ down to the negative rail.\\
-When that happens, the capacitor voltage will be almost exactly $7.5$ volts, while $v_o$ will be at $-15$. Therefore the capacitor will discharge through $R_1$, until it's down to $V_S/2 = -7.5$ volts, at which point $v_o = A(-7.5 - v_-)$ will turn positive, and force $v_o$ to the positive rail. This cycle will repeat over and over, and produce - at least in theory - a perfect square wave, with a 50\% duty cycle (i.e. the ``on time'' is exactly equal to the ``off time'').\\
+When that happens, the capacitor voltage will be almost exactly $7.5$ volts, while $v_o$ will be at $-15$. Therefore the capacitor will discharge through $R$, until it's down to $V_S/2 = -7.5$ volts, at which point $v_o = A(-7.5 - v_-)$ will turn positive, and force $v_o$ to the positive rail. This cycle will repeat over and over, and produce - at least in theory - a perfect square wave, with a 50\% duty cycle (i.e. the ``on time'' is exactly equal to the ``off time'').\\
 
 Now, let's turn to calculating the oscillation frequency of this circuit. The way we do this is to calculate the rise time and the fall time for the RC circuit at the inverting input, and use that information to find the frequency.
 
@@ -2820,7 +2835,7 @@ so:
 
 If we evaluate this expression at 0, the exponential goes to 1, so we end up with
 
-\[ E = {V_S}^2 \left[ -C e^{-\frac{T_1}{R_{ON_P} C}} + C \right]
+\[ E = {V_S}^2 \left[ -C e^{-\frac{T_1}{R_{ON_P} C}} + C \right] \]
 
 \[ E = {V_S}^2 \left[ C \left( 1 - e^{-\frac{T_1}{R_{ON_P} C}} \right) \right] \]
 
